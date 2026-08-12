@@ -72,12 +72,6 @@ tool/enrolsuspension:manage
 
 Somente usuários autorizados devem possuir permissão para realizar suspensões e reativações.
 
-## Aviso
-
-Recomenda-se testar o plugin em um ambiente de homologação antes de utilizá-lo em produção.
-
-Métodos de inscrição ou integrações personalizadas podem possuir comportamentos específicos que devem ser validados em cada ambiente Moodle.
-
 ## Licença
 
 Este projeto é distribuído sob a licença **GNU GPL v3 ou posterior**.
