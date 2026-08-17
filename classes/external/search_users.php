@@ -63,7 +63,7 @@ class search_users extends external_api {
         self::validate_context($context);
 
         require_capability(
-            'tool/enrolsuspension:manage',
+            'tool/enrolsuspension:suspend',
             $context
         );
 

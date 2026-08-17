@@ -33,6 +33,9 @@ A suspensão não exclui a conta do usuário nem remove definitivamente sua matr
 - Reativação de inscrições suspensas.
 - Importação de usuários por CSV/TXT.
 - Atalho para a ferramenta dentro das disciplinas.
+- Operações isoladas por identificador único, evitando conflito entre abas paralelas.
+- Confirmação de uso único e validação dos vínculos exatos revisados.
+- Histórico paginado com exportação CSV.
 
 ## Compatibilidade
 
@@ -64,13 +67,22 @@ Admin tool
 
 ## Permissões
 
-O acesso às funcionalidades administrativas é controlado pela capability:
+As permissões foram separadas por responsabilidade:
 
 ```text
-tool/enrolsuspension:manage
+tool/enrolsuspension:view
+tool/enrolsuspension:suspend
+tool/enrolsuspension:reactivate
+tool/enrolsuspension:import
 ```
 
-Somente usuários autorizados devem possuir permissão para realizar suspensões e reativações.
+A capability legada `tool/enrolsuspension:manage` permanece apenas para compatibilidade com versões anteriores.
+
+## Métodos de inscrição suportados
+
+Por segurança, alterações de estado são realizadas somente em métodos explicitamente suportados e que autorizam gerenciamento manual pelo Moodle. Nesta versão, os métodos suportados são `manual` e `self`.
+
+Métodos sincronizados ou protegidos, como vínculos controlados por coorte ou fontes externas, são bloqueados na revisão para evitar que uma sincronização reverta a suspensão ou que o plugin altere dados gerenciados por outra fonte.
 
 ## Licença
 

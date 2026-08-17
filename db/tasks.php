@@ -7,7 +7,7 @@
 // (at your option) any later version.
 
 /**
- * External service definitions for the Enrol Suspension plugin.
+ * Scheduled task definitions for tool_enrolsuspension.
  *
  * @package    tool_enrolsuspension
  * @copyright  2026
@@ -16,13 +16,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$functions = [
-    'tool_enrolsuspension_search_users' => [
-        'classname' => \tool_enrolsuspension\external\search_users::class,
-        'methodname' => 'execute',
-        'description' => 'Searches users for the suspension selector.',
-        'type' => 'read',
-        'ajax' => true,
-        'capabilities' => 'tool/enrolsuspension:suspend',
+$tasks = [
+    [
+        'classname' => 'tool_enrolsuspension\\task\\cleanup_operations',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => '*',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
     ],
 ];

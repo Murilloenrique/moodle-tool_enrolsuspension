@@ -1,13 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="admin/tool/enrolsuspension/db" VERSION="20260805" COMMENT="XMLDB file for tool_enrolsuspension">
+<XMLDB PATH="admin/tool/enrolsuspension/db" VERSION="20260817" COMMENT="XMLDB file for tool_enrolsuspension">
   <TABLES>
     <TABLE NAME="tool_enrolsuspension" COMMENT="Permanent enrolment suspensions managed by the plugin">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="operationid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="userenrolmentid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="activekey" TYPE="char" LENGTH="64" NOTNULL="true"/>
         <FIELD NAME="reason" TYPE="text" NOTNULL="false"/>
         <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>
         <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
@@ -20,11 +22,74 @@
         <KEY NAME="useridfk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
         <KEY NAME="courseidfk" TYPE="foreign" FIELDS="courseid" REFTABLE="course" REFFIELDS="id"/>
         <KEY NAME="enrolidfk" TYPE="foreign" FIELDS="enrolid" REFTABLE="enrol" REFFIELDS="id"/>
-        <KEY NAME="createdbyfk" TYPE="foreign" FIELDS="createdby" REFTABLE="user" REFFIELDS="id"/>
       </KEYS>
       <INDEXES>
         <INDEX NAME="statusidx" UNIQUE="false" FIELDS="status"/>
         <INDEX NAME="usercourseidx" UNIQUE="false" FIELDS="userid, courseid"/>
+        <INDEX NAME="activekeyuniq" UNIQUE="true" FIELDS="activekey"/>
+        <INDEX NAME="operationidx" UNIQUE="false" FIELDS="operationid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="tool_enrolsusp_operation" COMMENT="Immutable suspension workflow operations">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="token" TYPE="char" LENGTH="64" NOTNULL="true"/>
+        <FIELD NAME="courseids" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="forcedcourseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="reason" TYPE="text" NOTNULL="false"/>
+        <FIELD NAME="status" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="claimtoken" TYPE="char" LENGTH="64" NOTNULL="false"/>
+        <FIELD NAME="createdby" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="expiresat" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="consumedat" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="tokenuniq" UNIQUE="true" FIELDS="token"/>
+        <INDEX NAME="creatorstatusidx" UNIQUE="false" FIELDS="createdby, status"/>
+        <INDEX NAME="expiryidx" UNIQUE="false" FIELDS="expiresat"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="tool_enrolsusp_opuser" COMMENT="Users selected for a suspension workflow operation">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="operationid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="operationfk" TYPE="foreign" FIELDS="operationid" REFTABLE="tool_enrolsusp_operation" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="operationuseruniq" UNIQUE="true" FIELDS="operationid, userid"/>
+        <INDEX NAME="userididx" UNIQUE="false" FIELDS="userid"/>
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="tool_enrolsusp_opitem" COMMENT="Exact enrolment links frozen for a suspension operation">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="operationid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="userenrolmentid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="enroltype" TYPE="char" LENGTH="50" NOTNULL="true"/>
+        <FIELD NAME="supported" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="supportreason" TYPE="char" LENGTH="100" NOTNULL="false"/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="operationfk" TYPE="foreign" FIELDS="operationid" REFTABLE="tool_enrolsusp_operation" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="operationueuniq" UNIQUE="true" FIELDS="operationid, userenrolmentid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+// See the GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Course selection page.
@@ -17,239 +25,95 @@
 require_once(__DIR__ . '/../../../config.php');
 
 require_login();
-
 $context = context_system::instance();
+require_capability('tool/enrolsuspension:suspend', $context);
 
-require_capability('tool/enrolsuspension:manage', $context);
+$token = required_param('op', PARAM_ALPHANUM);
+$operation = \tool_enrolsuspension\local\operation_manager::get($token, $USER->id);
+$userids = \tool_enrolsuspension\local\operation_manager::userids($operation);
+$coursemap = \tool_enrolsuspension\local\manager::get_course_map($userids, (int) $operation->forcedcourseid);
 
-$PAGE->set_url(
-    new moodle_url('/admin/tool/enrolsuspension/courses.php')
-);
+[$userssql, $usersparams] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'userid');
+$users = $DB->get_records_select('user', "id {$userssql} AND deleted = 0", $usersparams,
+    'firstname ASC, lastname ASC', 'id, firstname, lastname, email, username, idnumber');
 
+$PAGE->set_url(new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]));
 $PAGE->set_context($context);
-
-$PAGE->set_title(
-    get_string('selectcourses', 'tool_enrolsuspension')
-);
-
-$PAGE->set_heading(
-    get_string('pluginname', 'tool_enrolsuspension')
-);
-
-$selecteduserids =
-    $SESSION->tool_enrolsuspension_selectedusers ?? [];
-
-if (empty($selecteduserids)) {
-    redirect(
-        new moodle_url('/admin/tool/enrolsuspension/index.php'),
-        get_string('selectusersfirst', 'tool_enrolsuspension'),
-        null,
-        \core\output\notification::NOTIFY_WARNING
-    );
-}
-
-[$userssql, $usersparams] = $DB->get_in_or_equal(
-    $selecteduserids,
-    SQL_PARAMS_NAMED,
-    'userid'
-);
-
-$users = $DB->get_records_select(
-    'user',
-    "id {$userssql} AND deleted = 0",
-    $usersparams,
-    'firstname ASC, lastname ASC',
-    'id, firstname, lastname, email, username, idnumber'
-);
-
-$coursemap = [];
-$forcedcourseid = $SESSION->tool_enrolsuspension_forcedcourse ?? 0;
-
-foreach ($users as $user) {
-    $usercourses = enrol_get_users_courses(
-        $user->id,
-        true,
-        'id, fullname, shortname, visible'
-    );
-
-    foreach ($usercourses as $course) {
-        if ((int) $course->id === SITEID || ($forcedcourseid && (int)$course->id !== (int)$forcedcourseid)) {
-            continue;
-        }
-
-        if (!isset($coursemap[$course->id])) {
-            $coursemap[$course->id] = [
-                'course' => $course,
-                'userids' => [],
-            ];
-        }
-
-        $coursemap[$course->id]['userids'][] = (int) $user->id;
-    }
-}
-
-uasort($coursemap, static function(array $first, array $second): int {
-    return strcasecmp(
-        $first['course']->fullname,
-        $second['course']->fullname
-    );
-});
+$PAGE->set_title(get_string('selectcourses', 'tool_enrolsuspension'));
+$PAGE->set_heading(get_string('pluginname', 'tool_enrolsuspension'));
 
 echo $OUTPUT->header();
-
-echo $OUTPUT->heading(
-    get_string('selectcourses', 'tool_enrolsuspension')
-);
-
-echo $OUTPUT->heading(
-    get_string('selectedusers', 'tool_enrolsuspension'),
-    3
-);
-
+echo $OUTPUT->heading(get_string('selectcourses', 'tool_enrolsuspension'));
+echo $OUTPUT->heading(get_string('selectedusers', 'tool_enrolsuspension'), 3);
 $useritems = [];
-
 foreach ($users as $user) {
     $useritems[] = fullname($user) . ' — ' . s($user->email);
 }
-
 echo html_writer::alist($useritems);
+echo $OUTPUT->heading(get_string('availablecourses', 'tool_enrolsuspension'), 3);
 
-echo $OUTPUT->heading(
-    get_string('availablecourses', 'tool_enrolsuspension'),
-    3
-);
-
-if (empty($coursemap)) {
-    echo $OUTPUT->notification(
-        get_string('nocoursesfound', 'tool_enrolsuspension'),
-        \core\output\notification::NOTIFY_INFO
-    );
+if (!$coursemap) {
+    echo $OUTPUT->notification(get_string('nocoursesfound', 'tool_enrolsuspension'),
+        \core\output\notification::NOTIFY_INFO);
 } else {
     echo html_writer::start_tag('form', [
         'method' => 'post',
-        'action' => new moodle_url(
-            '/admin/tool/enrolsuspension/options.php'
-        ),
+        'action' => new moodle_url('/admin/tool/enrolsuspension/options.php'),
     ]);
-
-    echo html_writer::empty_tag('input', [
-        'type' => 'hidden',
-        'name' => 'sesskey',
-        'value' => sesskey(),
-    ]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+    echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'op', 'value' => $token]);
 
     $table = new html_table();
-
     $table->head = [
         get_string('select'),
         get_string('course'),
-        get_string('shortnamecourse'),
+        get_string('shortnamecourse', 'tool_enrolsuspension'),
         get_string('enrolledselectedusers', 'tool_enrolsuspension'),
     ];
 
-    foreach ($coursemap as $courseid => $courseinformation) {
-        $course = $courseinformation['course'];
-        $enrolleduserids = array_values(array_unique($courseinformation['userids']));
-        $enrolledcount = count($enrolleduserids);
-
+    foreach ($coursemap as $courseid => $info) {
+        $enrolleduserids = array_values($info['userids']);
         $enrollednames = [];
         $notenrollednames = [];
-
         foreach ($users as $user) {
-            $escapedname = s(fullname($user));
-
             if (in_array((int) $user->id, $enrolleduserids, true)) {
-                $enrollednames[] = $escapedname;
+                $enrollednames[] = s(fullname($user));
             } else {
-                $notenrollednames[] = $escapedname;
+                $notenrollednames[] = s(fullname($user));
             }
         }
-
-        $enrolmentdetails = html_writer::div(
-            $enrolledcount . ' / ' . count($users),
-            'font-weight-bold mb-1'
-        );
-
-        $enrolmentdetails .= html_writer::div(
-            html_writer::span(
-                get_string('enrolledlabel', 'tool_enrolsuspension') . ':',
-                'font-weight-bold text-success'
-            ) . ' ' . implode(', ', $enrollednames),
+        $details = html_writer::div(count($enrolleduserids) . ' / ' . count($users), 'font-weight-bold mb-1');
+        $details .= html_writer::div(
+            html_writer::span(get_string('enrolledlabel', 'tool_enrolsuspension') . ':',
+                'font-weight-bold text-success') . ' ' . implode(', ', $enrollednames),
             'mb-1'
         );
-
-        if (!empty($notenrollednames)) {
-            $enrolmentdetails .= html_writer::div(
-                html_writer::span(
-                    get_string('notenrolledlabel', 'tool_enrolsuspension') . ':',
-                    'font-weight-bold text-muted'
-                ) . ' ' . implode(', ', $notenrollednames),
+        if ($notenrollednames) {
+            $details .= html_writer::div(
+                html_writer::span(get_string('notenrolledlabel', 'tool_enrolsuspension') . ':',
+                    'font-weight-bold text-muted') . ' ' . implode(', ', $notenrollednames),
                 'small text-muted'
             );
         }
-
-        $checkbox = html_writer::checkbox(
-            'selectedcourses[]',
-            $courseid,
-            false,
-            '',
-            ['id' => 'course_' . $courseid]
-        );
-
         $table->data[] = [
-            $checkbox,
-            format_string($course->fullname),
-            format_string($course->shortname),
-            $enrolmentdetails,
+            html_writer::checkbox('selectedcourses[]', $courseid, false, '', ['id' => 'course_' . $courseid]),
+            format_string($info['course']->fullname),
+            format_string($info['course']->shortname),
+            $details,
         ];
     }
-
     echo html_writer::table($table);
 
-    $allcurrentcoursescheckbox = html_writer::checkbox(
-        'allcurrentcourses',
-        1,
-        false,
-        '',
-        ['id' => 'allcurrentcourses']
-    );
+    $allcheckbox = html_writer::checkbox('allcurrentcourses', 1, false, '', ['id' => 'allcurrentcourses']);
+    $alllabel = html_writer::tag('label', get_string('suspendallcurrentcourses', 'tool_enrolsuspension'), [
+        'for' => 'allcurrentcourses', 'class' => 'mb-0', 'style' => 'margin-left: 8px;',
+    ]);
+    echo html_writer::div($allcheckbox . $alllabel, 'mb-4 d-flex align-items-center');
 
-    $allcurrentcourseslabel = html_writer::tag(
-        'label',
-        get_string(
-            'suspendallcurrentcourses',
-            'tool_enrolsuspension'
-        ),
-        [
-            'for' => 'allcurrentcourses',
-            'class' => 'mb-0',
-            'style' => 'margin-left: 8px;',
-        ]
-    );
-
-    echo html_writer::div(
-        $allcurrentcoursescheckbox . $allcurrentcourseslabel,
-        'mb-4 d-flex align-items-center'
-    );
-
-    echo html_writer::link(
-        new moodle_url(
-            '/admin/tool/enrolsuspension/index.php'
-        ),
-        get_string('back'),
-        ['class' => 'btn btn-secondary mr-2']
-    );
-
-    echo html_writer::tag(
-        'button',
-        get_string('next', 'tool_enrolsuspension'),
-        [
-            'type' => 'submit',
-            'class' => 'btn btn-primary',
-        ]
-    );
-
+    echo html_writer::link(new moodle_url('/admin/tool/enrolsuspension/index.php'), get_string('back'),
+        ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']);
+    echo html_writer::tag('button', get_string('next', 'tool_enrolsuspension'),
+        ['type' => 'submit', 'class' => 'btn btn-primary']);
     echo html_writer::end_tag('form');
 }
-
 echo $OUTPUT->footer();
