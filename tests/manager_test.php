@@ -53,9 +53,9 @@ final class manager_test extends \advanced_testcase {
         $opa = operation_manager::create([$usera->id], $USER->id);
         $opb = operation_manager::create([$userb->id], $USER->id);
 
-        $this->assertSame([$usera->id], operation_manager::userids($opa));
-        $this->assertSame([$userb->id], operation_manager::userids($opb));
-        $this->assertNotSame($opa->token, $opb->token);
+       $this->assertSame([(int) $usera->id], operation_manager::userids($opa));
+       $this->assertSame([(int) $userb->id], operation_manager::userids($opb));
+       $this->assertNotSame($opa->token, $opb->token);
     }
 
     /** A reviewed operation can only be consumed once and creates one active audit row per exact link. */
