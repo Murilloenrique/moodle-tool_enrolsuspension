@@ -262,7 +262,7 @@ class manager {
                         || (int) $ue->enrolid !== (int) $record->enrolid) {
                     self::mark_stale($record, $actorid);
                     $result['skipped']++;
-                    $result['errors'][] = get_string('reactivationstale', 'tool_enrolsuspension_log', $recordid);
+                    $result['errors'][] = get_string('reactivationstale', 'tool_enrolsuspension', $recordid);
                     $transaction->allow_commit();
                     continue;
                 }
@@ -279,7 +279,7 @@ class manager {
                 if (!$instance || (int) $instance->courseid !== (int) $record->courseid) {
                     self::mark_stale($record, $actorid);
                     $result['skipped']++;
-                    $result['errors'][] = get_string('reactivationstale', 'tool_enrolsuspension_log', $recordid);
+                    $result['errors'][] = get_string('reactivationstale', 'tool_enrolsuspension', $recordid);
                     $transaction->allow_commit();
                     continue;
                 }
