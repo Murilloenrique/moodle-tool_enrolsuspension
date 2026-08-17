@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.4-beta — 2026-08-17
+
+- Corrige o padrão de cabeçalho/licença exigido pelo Moodle Code Checker.
+- Corrige a formatação PSR-2/Moodle de chamadas multilinha em `courses.php`.
+
 ## 1.1.1-beta - 2026-08-17
 
 - Renamed all plugin-owned database tables to use the full `tool_enrolsuspension` Frankenstyle prefix.
