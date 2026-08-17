@@ -158,5 +158,80 @@ function xmldb_tool_enrolsuspension_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026081700, 'tool', 'enrolsuspension');
     }
 
+    if ($oldversion < 2026081702) {
+        // Rename plugin tables so every table uses the full Frankenstyle component prefix.
+        // Drop child foreign keys before renaming the referenced operation table, then recreate them.
+        $legacyopuser = new xmldb_table('tool_enrolsusp_opuser');
+        $legacyopitem = new xmldb_table('tool_enrolsusp_opitem');
+        $legacyoperation = new xmldb_table('tool_enrolsusp_operation');
+        $legacyaudit = new xmldb_table('tool_enrolsuspension');
+
+        $legacyuserfk = new xmldb_key(
+            'operationfk',
+            XMLDB_KEY_FOREIGN,
+            ['operationid'],
+            'tool_enrolsusp_operation',
+            ['id']
+        );
+        if ($dbman->table_exists($legacyopuser) && $dbman->key_exists($legacyopuser, $legacyuserfk)) {
+            $dbman->drop_key($legacyopuser, $legacyuserfk);
+        }
+
+        $legacyitemfk = new xmldb_key(
+            'operationfk',
+            XMLDB_KEY_FOREIGN,
+            ['operationid'],
+            'tool_enrolsusp_operation',
+            ['id']
+        );
+        if ($dbman->table_exists($legacyopitem) && $dbman->key_exists($legacyopitem, $legacyitemfk)) {
+            $dbman->drop_key($legacyopitem, $legacyitemfk);
+        }
+
+        $newaudit = new xmldb_table('tool_enrolsuspension_log');
+        if ($dbman->table_exists($legacyaudit) && !$dbman->table_exists($newaudit)) {
+            $dbman->rename_table($legacyaudit, 'tool_enrolsuspension_log');
+        }
+
+        $newoperation = new xmldb_table('tool_enrolsuspension_op');
+        if ($dbman->table_exists($legacyoperation) && !$dbman->table_exists($newoperation)) {
+            $dbman->rename_table($legacyoperation, 'tool_enrolsuspension_op');
+        }
+
+        $newopuser = new xmldb_table('tool_enrolsuspension_opusr');
+        if ($dbman->table_exists($legacyopuser) && !$dbman->table_exists($newopuser)) {
+            $dbman->rename_table($legacyopuser, 'tool_enrolsuspension_opusr');
+        }
+
+        $newopitem = new xmldb_table('tool_enrolsuspension_opitm');
+        if ($dbman->table_exists($legacyopitem) && !$dbman->table_exists($newopitem)) {
+            $dbman->rename_table($legacyopitem, 'tool_enrolsuspension_opitm');
+        }
+
+        $newuserfk = new xmldb_key(
+            'operationfk',
+            XMLDB_KEY_FOREIGN,
+            ['operationid'],
+            'tool_enrolsuspension_op',
+            ['id']
+        );
+        if ($dbman->table_exists($newopuser) && !$dbman->key_exists($newopuser, $newuserfk)) {
+            $dbman->add_key($newopuser, $newuserfk);
+        }
+
+        $newitemfk = new xmldb_key(
+            'operationfk',
+            XMLDB_KEY_FOREIGN,
+            ['operationid'],
+            'tool_enrolsuspension_op',
+            ['id']
+        );
+        if ($dbman->table_exists($newopitem) && !$dbman->key_exists($newopitem, $newitemfk)) {
+            $dbman->add_key($newopitem, $newitemfk);
+        }
+
+        upgrade_plugin_savepoint(true, 2026081702, 'tool', 'enrolsuspension');
+    }
+
     return true;
 }

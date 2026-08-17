@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.1.1-beta - 2026-08-17
+
+- Renamed all plugin-owned database tables to use the full `tool_enrolsuspension` Frankenstyle prefix.
+- Added an upgrade migration that preserves existing audit and workflow data while renaming tables.
+- Recreated workflow foreign keys after table migration.
+- Fixed strict PHPUnit user ID type assertions.
+- Addresses the Moodle Plugin CI `validate` table-prefix failure.
+
 ## 1.1.0-beta - 2026-08-17
 
 - Isola cada fluxo de suspensão em uma operação identificada por token aleatório.

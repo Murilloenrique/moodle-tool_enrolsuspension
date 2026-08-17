@@ -32,7 +32,7 @@ if (!in_array($status, $allowedstatuses, true)) {
 $sql = "SELECT s.*, u.firstname, u.lastname, u.email, c.fullname AS coursename,
                creator.firstname AS creatorfirstname, creator.lastname AS creatorlastname,
                reactivator.firstname AS reactivatorfirstname, reactivator.lastname AS reactivatorlastname
-          FROM {tool_enrolsuspension} s
+          FROM {tool_enrolsuspension_log} s
      LEFT JOIN {user} u ON u.id = s.userid
      LEFT JOIN {course} c ON c.id = s.courseid
      LEFT JOIN {user} creator ON creator.id = s.createdby

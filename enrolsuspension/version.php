@@ -15,7 +15,7 @@
 // along with Moodle. If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Navigation hooks for tool_enrolsuspension.
+ * Version information for the Enrol Suspension plugin.
  *
  * @package    tool_enrolsuspension
  * @copyright  2026
@@ -24,12 +24,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-/** Add a suspension shortcut to course navigation for global suspension operators. */
-function tool_enrolsuspension_extend_navigation_course($navigation, $course, $context): void {
-    if (!has_capability('tool/enrolsuspension:suspend', context_system::instance())) {
-        return;
-    }
-    $url = new moodle_url('/admin/tool/enrolsuspension/index.php', ['courseid' => $course->id]);
-    $navigation->add(get_string('coursesuspensions', 'tool_enrolsuspension'), $url,
-        navigation_node::TYPE_SETTING, null, 'tool_enrolsuspension');
-}
+$plugin->component = 'tool_enrolsuspension';
+$plugin->version   = 2026081703;
+$plugin->requires  = 2024042200;
+$plugin->release   = '1.1.2-beta';
+$plugin->maturity  = MATURITY_BETA;

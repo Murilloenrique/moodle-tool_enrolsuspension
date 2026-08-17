@@ -54,10 +54,10 @@ class operation_manager {
 
         $userids = self::normalise_ids($userids);
         if (!$userids) {
-            throw new \moodle_exception('selectatleastoneuser', 'tool_enrolsuspension');
+            throw new \moodle_exception('selectatleastoneuser', 'tool_enrolsuspension_log');
         }
         if (count($userids) > 500) {
-            throw new \moodle_exception('toomanyusers', 'tool_enrolsuspension');
+            throw new \moodle_exception('toomanyusers', 'tool_enrolsuspension_log');
         }
 
         $now = time();
@@ -75,9 +75,9 @@ class operation_manager {
             'consumedat' => 0,
         ];
         self::cleanup_expired();
-        $record->id = $DB->insert_record('tool_enrolsusp_operation', $record);
+        $record->id = $DB->insert_record('tool_enrolsuspension_op', $record);
         foreach ($userids as $userid) {
-            $DB->insert_record('tool_enrolsusp_opuser', (object) [
+            $DB->insert_record('tool_enrolsuspension_opusr', (object) [
                 'operationid' => $record->id,
                 'userid' => $userid,
             ]);
@@ -96,25 +96,35 @@ class operation_manager {
     public static function get(string $token, int $actorid, bool $allowexpired = false): \stdClass {
         global $DB;
 
-        $operation = $DB->get_record('tool_enrolsusp_operation', [
+        $operation = $DB->get_record('tool_enrolsuspension_op', [
             'token' => $token,
             'createdby' => $actorid,
         ], '*', MUST_EXIST);
 
         if (!$allowexpired && (int) $operation->expiresat < time()) {
-            throw new \moodle_exception('operationexpired', 'tool_enrolsuspension');
+            throw new \moodle_exception('operationexpired', 'tool_enrolsuspension_log');
         }
         return $operation;
     }
 
-    /** @return int[] */
+    /**
+     * Get selected user IDs.
+     *
+     * @param \stdClass $operation Operation record.
+     * @return int[]
+     */
     public static function userids(\stdClass $operation): array {
         global $DB;
-        return array_map('intval', array_keys($DB->get_records('tool_enrolsusp_opuser',
+        return array_map('intval', array_keys($DB->get_records('tool_enrolsuspension_opusr',
             ['operationid' => $operation->id], 'userid ASC', 'userid')));
     }
 
-    /** @return int[] */
+    /**
+     * Get selected course IDs.
+     *
+     * @param \stdClass $operation Operation record.
+     * @return int[]
+     */
     public static function courseids(\stdClass $operation): array {
         return self::sequence_to_ids($operation->courseids ?? '');
     }
@@ -131,18 +141,18 @@ class operation_manager {
 
         $operation = self::get($token, $actorid);
         if (in_array((int) $operation->status, [self::STATUS_PROCESSING, self::STATUS_CONSUMED], true)) {
-            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension');
+            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension_log');
         }
         $courseids = self::normalise_ids($courseids);
         if (!$courseids) {
-            throw new \moodle_exception('selectatleastonecourse', 'tool_enrolsuspension');
+            throw new \moodle_exception('selectatleastonecourse', 'tool_enrolsuspension_log');
         }
         if (count($courseids) > 500) {
-            throw new \moodle_exception('toomanycourses', 'tool_enrolsuspension');
+            throw new \moodle_exception('toomanycourses', 'tool_enrolsuspension_log');
         }
 
-        $DB->delete_records('tool_enrolsusp_opitem', ['operationid' => $operation->id]);
-        $DB->update_record('tool_enrolsusp_operation', (object) [
+        $DB->delete_records('tool_enrolsuspension_opitm', ['operationid' => $operation->id]);
+        $DB->update_record('tool_enrolsuspension_op', (object) [
             'id' => $operation->id,
             'courseids' => implode(',', $courseids),
             'reason' => '',
@@ -165,34 +175,34 @@ class operation_manager {
 
         $operation = self::get($token, $actorid);
         if (in_array((int) $operation->status, [self::STATUS_PROCESSING, self::STATUS_CONSUMED], true)) {
-            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension');
+            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension_log');
         }
 
         $reason = trim($reason);
         if ($reason === '') {
-            throw new \moodle_exception('reasonrequired', 'tool_enrolsuspension');
+            throw new \moodle_exception('reasonrequired', 'tool_enrolsuspension_log');
         }
         if (\core_text::strlen($reason) > 1000) {
-            throw new \moodle_exception('reasontoolong', 'tool_enrolsuspension');
+            throw new \moodle_exception('reasontoolong', 'tool_enrolsuspension_log');
         }
 
         $userids = self::userids($operation);
         $courseids = self::courseids($operation);
         $enrolments = manager::get_effective_active_enrolments($userids, $courseids);
         if (!$enrolments) {
-            throw new \moodle_exception('noactiveenrolments', 'tool_enrolsuspension');
+            throw new \moodle_exception('noactiveenrolments', 'tool_enrolsuspension_log');
         }
 
         $transaction = $DB->start_delegated_transaction();
         try {
-            $DB->delete_records('tool_enrolsusp_opitem', ['operationid' => $operation->id]);
+            $DB->delete_records('tool_enrolsuspension_opitm', ['operationid' => $operation->id]);
             $blocked = false;
             foreach ($enrolments as $enrolment) {
                 [$supported, $supportreason] = manager::assess_manageability($enrolment);
                 if (!$supported) {
                     $blocked = true;
                 }
-                $DB->insert_record('tool_enrolsusp_opitem', (object) [
+                $DB->insert_record('tool_enrolsuspension_opitm', (object) [
                     'operationid' => $operation->id,
                     'userenrolmentid' => $enrolment->userenrolmentid,
                     'userid' => $enrolment->userid,
@@ -203,7 +213,7 @@ class operation_manager {
                     'supportreason' => $supportreason,
                 ]);
             }
-            $DB->update_record('tool_enrolsusp_operation', (object) [
+            $DB->update_record('tool_enrolsuspension_op', (object) [
                 'id' => $operation->id,
                 'reason' => $reason,
                 'status' => $blocked ? self::STATUS_BLOCKED : self::STATUS_READY,
@@ -219,10 +229,15 @@ class operation_manager {
         return self::get($token, $actorid);
     }
 
-    /** @return stdClass[] */
+    /**
+     * Get frozen operation items.
+     *
+     * @param int $operationid Operation ID.
+     * @return \stdClass[]
+     */
     public static function items(int $operationid): array {
         global $DB;
-        return $DB->get_records('tool_enrolsusp_opitem', ['operationid' => $operationid], 'id ASC');
+        return $DB->get_records('tool_enrolsuspension_opitm', ['operationid' => $operationid], 'id ASC');
     }
 
     /**
@@ -238,8 +253,8 @@ class operation_manager {
         if (in_array((int) $operation->status, [self::STATUS_PROCESSING, self::STATUS_CONSUMED], true)) {
             return;
         }
-        $DB->delete_records('tool_enrolsusp_opitem', ['operationid' => $operation->id]);
-        $DB->update_record('tool_enrolsusp_operation', (object) [
+        $DB->delete_records('tool_enrolsuspension_opitm', ['operationid' => $operation->id]);
+        $DB->update_record('tool_enrolsuspension_op', (object) [
             'id' => $operation->id,
             'status' => self::STATUS_DRAFT,
             'claimtoken' => null,
@@ -259,7 +274,7 @@ class operation_manager {
         );
         $params = ['now' => time()] + $statusparams;
         $expired = $DB->get_records_select(
-            'tool_enrolsusp_operation',
+            'tool_enrolsuspension_op',
             "expiresat < :now AND status {$statussql}",
             $params,
             '',
@@ -274,7 +289,7 @@ class operation_manager {
         );
         $terminalparams['terminalbefore'] = time() - DAYSECS;
         $terminal = $DB->get_records_select(
-            'tool_enrolsusp_operation',
+            'tool_enrolsuspension_op',
             "timemodified < :terminalbefore AND status {$terminalsql}",
             $terminalparams,
             '',
@@ -286,12 +301,17 @@ class operation_manager {
         }
 
         [$insql, $params] = $DB->get_in_or_equal($ids, SQL_PARAMS_NAMED, 'expired');
-        $DB->delete_records_select('tool_enrolsusp_opitem', "operationid {$insql}", $params);
-        $DB->delete_records_select('tool_enrolsusp_opuser', "operationid {$insql}", $params);
-        $DB->delete_records_select('tool_enrolsusp_operation', "id {$insql}", $params);
+        $DB->delete_records_select('tool_enrolsuspension_opitm', "operationid {$insql}", $params);
+        $DB->delete_records_select('tool_enrolsuspension_opusr', "operationid {$insql}", $params);
+        $DB->delete_records_select('tool_enrolsuspension_op', "id {$insql}", $params);
     }
 
-    /** @return int[] */
+    /**
+     * Convert a comma-separated sequence to IDs.
+     *
+     * @param string|null $sequence Comma-separated IDs.
+     * @return int[]
+     */
     private static function sequence_to_ids(?string $sequence): array {
         if (!$sequence) {
             return [];
@@ -299,7 +319,12 @@ class operation_manager {
         return self::normalise_ids(explode(',', $sequence));
     }
 
-    /** @return int[] */
+    /**
+     * Normalise a list of IDs.
+     *
+     * @param int[] $ids IDs to normalise.
+     * @return int[]
+     */
     private static function normalise_ids(array $ids): array {
         return array_values(array_unique(array_filter(array_map('intval', $ids), static fn(int $id): bool => $id > 0)));
     }

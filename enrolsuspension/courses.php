@@ -84,14 +84,18 @@ if (!$coursemap) {
         }
         $details = html_writer::div(count($enrolleduserids) . ' / ' . count($users), 'font-weight-bold mb-1');
         $details .= html_writer::div(
-            html_writer::span(get_string('enrolledlabel', 'tool_enrolsuspension') . ':',
-                'font-weight-bold text-success') . ' ' . implode(', ', $enrollednames),
+            html_writer::span(
+                get_string('enrolledlabel', 'tool_enrolsuspension') . ':',
+                'font-weight-bold text-success'
+            ) . ' ' . implode(', ', $enrollednames),
             'mb-1'
         );
         if ($notenrollednames) {
             $details .= html_writer::div(
-                html_writer::span(get_string('notenrolledlabel', 'tool_enrolsuspension') . ':',
-                    'font-weight-bold text-muted') . ' ' . implode(', ', $notenrollednames),
+                html_writer::span(
+                    get_string('notenrolledlabel', 'tool_enrolsuspension') . ':',
+                    'font-weight-bold text-muted'
+                ) . ' ' . implode(', ', $notenrollednames),
                 'small text-muted'
             );
         }
@@ -110,10 +114,16 @@ if (!$coursemap) {
     ]);
     echo html_writer::div($allcheckbox . $alllabel, 'mb-4 d-flex align-items-center');
 
-    echo html_writer::link(new moodle_url('/admin/tool/enrolsuspension/index.php'), get_string('back'),
-        ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']);
-    echo html_writer::tag('button', get_string('next', 'tool_enrolsuspension'),
-        ['type' => 'submit', 'class' => 'btn btn-primary']);
+    echo html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/index.php'),
+        get_string('back'),
+        ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']
+    );
+    echo html_writer::tag(
+        'button',
+        get_string('next', 'tool_enrolsuspension'),
+        ['type' => 'submit', 'class' => 'btn btn-primary']
+    );
     echo html_writer::end_tag('form');
 }
 echo $OUTPUT->footer();

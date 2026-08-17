@@ -53,9 +53,9 @@ final class manager_test extends \advanced_testcase {
         $opa = operation_manager::create([$usera->id], $USER->id);
         $opb = operation_manager::create([$userb->id], $USER->id);
 
-       $this->assertSame([(int) $usera->id], operation_manager::userids($opa));
-       $this->assertSame([(int) $userb->id], operation_manager::userids($opb));
-       $this->assertNotSame($opa->token, $opb->token);
+        $this->assertSame([(int) $usera->id], operation_manager::userids($opa));
+        $this->assertSame([(int) $userb->id], operation_manager::userids($opb));
+        $this->assertNotSame($opa->token, $opb->token);
     }
 
     /** A reviewed operation can only be consumed once and creates one active audit row per exact link. */
@@ -71,7 +71,7 @@ final class manager_test extends \advanced_testcase {
         $this->assertSame(1, $result['suspended']);
         $this->assertEquals(ENROL_USER_SUSPENDED,
             $DB->get_field('user_enrolments', 'status', ['id' => $ue->id]));
-        $this->assertEquals(1, $DB->count_records('tool_enrolsuspension', [
+        $this->assertEquals(1, $DB->count_records('tool_enrolsuspension_log', [
             'activekey' => 'ue:' . $ue->id,
         ]));
 
@@ -88,7 +88,7 @@ final class manager_test extends \advanced_testcase {
         operation_manager::set_courses($op->token, $actor->id, [$course->id]);
         operation_manager::freeze($op->token, $actor->id, 'Test');
         manager::suspend_operation($op->token, $actor->id);
-        $audit = $DB->get_record('tool_enrolsuspension', ['userenrolmentid' => $ue->id], '*', MUST_EXIST);
+        $audit = $DB->get_record('tool_enrolsuspension_log', ['userenrolmentid' => $ue->id], '*', MUST_EXIST);
 
         $plugin->unenrol_user($instance, $user->id);
         $studentroleid = $DB->get_field('role', 'id', ['shortname' => 'student'], MUST_EXIST);
@@ -104,6 +104,6 @@ final class manager_test extends \advanced_testcase {
         $this->assertEquals(ENROL_USER_SUSPENDED,
             $DB->get_field('user_enrolments', 'status', ['id' => $newue->id]));
         $this->assertEquals(manager::STATUS_STALE,
-            $DB->get_field('tool_enrolsuspension', 'status', ['id' => $audit->id]));
+            $DB->get_field('tool_enrolsuspension_log', 'status', ['id' => $audit->id]));
     }
 }

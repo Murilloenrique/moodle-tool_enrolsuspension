@@ -40,7 +40,7 @@ class provider implements
         \core_privacy\local\request\core_userlist_provider {
 
     public static function get_metadata(collection $collection): collection {
-        $collection->add_database_table('tool_enrolsuspension', [
+        $collection->add_database_table('tool_enrolsuspension_log', [
             'operationid' => 'privacy:metadata:operationid',
             'userid' => 'privacy:metadata:userid',
             'courseid' => 'privacy:metadata:courseid',
@@ -54,7 +54,7 @@ class provider implements
             'reactivatedby' => 'privacy:metadata:reactivatedby',
             'timereactivated' => 'privacy:metadata:timereactivated',
         ], 'privacy:metadata:table');
-        $collection->add_database_table('tool_enrolsusp_operation', [
+        $collection->add_database_table('tool_enrolsuspension_op', [
             'token' => 'privacy:metadata:operationtoken',
             'courseids' => 'privacy:metadata:courseids',
             'forcedcourseid' => 'privacy:metadata:forcedcourseid',
@@ -67,11 +67,11 @@ class provider implements
             'expiresat' => 'privacy:metadata:expiresat',
             'consumedat' => 'privacy:metadata:consumedat',
         ], 'privacy:metadata:operation');
-        $collection->add_database_table('tool_enrolsusp_opuser', [
+        $collection->add_database_table('tool_enrolsuspension_opusr', [
             'operationid' => 'privacy:metadata:operationid',
             'userid' => 'privacy:metadata:userid',
         ], 'privacy:metadata:operationuser');
-        $collection->add_database_table('tool_enrolsusp_opitem', [
+        $collection->add_database_table('tool_enrolsuspension_opitm', [
             'operationid' => 'privacy:metadata:operationid',
             'userid' => 'privacy:metadata:userid',
             'userenrolmentid' => 'privacy:metadata:userenrolmentid',
@@ -88,12 +88,12 @@ class provider implements
         global $DB;
 
         $list = new contextlist();
-        $hasdata = $DB->record_exists_select('tool_enrolsuspension',
+        $hasdata = $DB->record_exists_select('tool_enrolsuspension_log',
                 'userid = :u1 OR createdby = :u2 OR reactivatedby = :u3',
                 ['u1' => $userid, 'u2' => $userid, 'u3' => $userid])
-            || $DB->record_exists('tool_enrolsusp_operation', ['createdby' => $userid])
-            || $DB->record_exists('tool_enrolsusp_opuser', ['userid' => $userid])
-            || $DB->record_exists('tool_enrolsusp_opitem', ['userid' => $userid]);
+            || $DB->record_exists('tool_enrolsuspension_op', ['createdby' => $userid])
+            || $DB->record_exists('tool_enrolsuspension_opusr', ['userid' => $userid])
+            || $DB->record_exists('tool_enrolsuspension_opitm', ['userid' => $userid]);
         if ($hasdata) {
             $list->add_system_context();
         }
@@ -105,13 +105,13 @@ class provider implements
         if (!$context instanceof \context_system) {
             return;
         }
-        $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension}', []);
-        $userlist->add_from_sql('createdby', 'SELECT createdby FROM {tool_enrolsuspension} WHERE createdby > 0', []);
+        $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension_log}', []);
+        $userlist->add_from_sql('createdby', 'SELECT createdby FROM {tool_enrolsuspension_log} WHERE createdby > 0', []);
         $userlist->add_from_sql('reactivatedby',
-            'SELECT reactivatedby FROM {tool_enrolsuspension} WHERE reactivatedby > 0', []);
-        $userlist->add_from_sql('createdby', 'SELECT createdby FROM {tool_enrolsusp_operation} WHERE createdby > 0', []);
-        $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsusp_opuser}', []);
-        $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsusp_opitem}', []);
+            'SELECT reactivatedby FROM {tool_enrolsuspension_log} WHERE reactivatedby > 0', []);
+        $userlist->add_from_sql('createdby', 'SELECT createdby FROM {tool_enrolsuspension_op} WHERE createdby > 0', []);
+        $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension_opusr}', []);
+        $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension_opitm}', []);
     }
 
     public static function export_user_data(approved_contextlist $contextlist): void {
@@ -121,12 +121,12 @@ class provider implements
             return;
         }
         $userid = $contextlist->get_user()->id;
-        $audit = $DB->get_records_select('tool_enrolsuspension',
+        $audit = $DB->get_records_select('tool_enrolsuspension_log',
             'userid = :u1 OR createdby = :u2 OR reactivatedby = :u3',
             ['u1' => $userid, 'u2' => $userid, 'u3' => $userid], 'timecreated ASC');
-        $selected = $DB->get_records('tool_enrolsusp_opuser', ['userid' => $userid], 'id ASC');
-        $items = $DB->get_records('tool_enrolsusp_opitem', ['userid' => $userid], 'id ASC');
-        $operationids = array_keys($DB->get_records('tool_enrolsusp_operation', ['createdby' => $userid], '', 'id'));
+        $selected = $DB->get_records('tool_enrolsuspension_opusr', ['userid' => $userid], 'id ASC');
+        $items = $DB->get_records('tool_enrolsuspension_opitm', ['userid' => $userid], 'id ASC');
+        $operationids = array_keys($DB->get_records('tool_enrolsuspension_op', ['createdby' => $userid], '', 'id'));
         foreach ($selected as $record) {
             $operationids[] = (int) $record->operationid;
         }
@@ -140,11 +140,11 @@ class provider implements
         }
         $operationids = array_values(array_unique(array_filter(array_map('intval', $operationids))));
         $operations = $operationids
-            ? $DB->get_records_list('tool_enrolsusp_operation', 'id', $operationids, 'timecreated ASC')
+            ? $DB->get_records_list('tool_enrolsuspension_op', 'id', $operationids, 'timecreated ASC')
             : [];
         if ($audit || $operations || $selected || $items) {
             writer::with_context(context_system::instance())->export_data(
-                [get_string('pluginname', 'tool_enrolsuspension')],
+                [get_string('pluginname', 'tool_enrolsuspension_log')],
                 (object) [
                     'auditrecords' => array_values($audit),
                     'operationscreated' => array_values($operations),
@@ -163,17 +163,17 @@ class provider implements
         }
 
         // Reconcile links which this plugin still actively controls before removing its audit data.
-        $active = $DB->get_records('tool_enrolsuspension', [
+        $active = $DB->get_records('tool_enrolsuspension_log', [
             'status' => \tool_enrolsuspension\local\manager::STATUS_SUSPENDED,
         ]);
         foreach ($active as $record) {
             self::reconcile_active_subject_record($record);
         }
 
-        $DB->delete_records('tool_enrolsusp_opitem');
-        $DB->delete_records('tool_enrolsusp_opuser');
-        $DB->delete_records('tool_enrolsusp_operation');
-        $DB->delete_records('tool_enrolsuspension');
+        $DB->delete_records('tool_enrolsuspension_opitm');
+        $DB->delete_records('tool_enrolsuspension_opusr');
+        $DB->delete_records('tool_enrolsuspension_op');
+        $DB->delete_records('tool_enrolsuspension_log');
     }
 
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
@@ -204,31 +204,31 @@ class provider implements
             return;
         }
         foreach ($userids as $userid) {
-            $subjectrecords = $DB->get_records('tool_enrolsuspension', ['userid' => $userid]);
+            $subjectrecords = $DB->get_records('tool_enrolsuspension_log', ['userid' => $userid]);
             foreach ($subjectrecords as $record) {
                 if ((int) $record->status === \tool_enrolsuspension\local\manager::STATUS_SUSPENDED) {
                     self::reconcile_active_subject_record($record);
                 }
             }
-            $DB->delete_records('tool_enrolsuspension', ['userid' => $userid]);
+            $DB->delete_records('tool_enrolsuspension_log', ['userid' => $userid]);
 
             // The operator's identity is not required for the remaining operational history.
-            $DB->set_field('tool_enrolsuspension', 'createdby', 0, ['createdby' => $userid]);
-            $DB->set_field('tool_enrolsuspension', 'reactivatedby', 0, ['reactivatedby' => $userid]);
+            $DB->set_field('tool_enrolsuspension_log', 'createdby', 0, ['createdby' => $userid]);
+            $DB->set_field('tool_enrolsuspension_log', 'reactivatedby', 0, ['reactivatedby' => $userid]);
 
-            $operationids = array_keys($DB->get_records('tool_enrolsusp_operation', ['createdby' => $userid], '', 'id'));
-            foreach ($DB->get_records('tool_enrolsusp_opuser', ['userid' => $userid], '', 'operationid') as $opuser) {
+            $operationids = array_keys($DB->get_records('tool_enrolsuspension_op', ['createdby' => $userid], '', 'id'));
+            foreach ($DB->get_records('tool_enrolsuspension_opusr', ['userid' => $userid], '', 'operationid') as $opuser) {
                 $operationids[] = (int) $opuser->operationid;
             }
-            foreach ($DB->get_records('tool_enrolsusp_opitem', ['userid' => $userid], '', 'operationid') as $opitem) {
+            foreach ($DB->get_records('tool_enrolsuspension_opitm', ['userid' => $userid], '', 'operationid') as $opitem) {
                 $operationids[] = (int) $opitem->operationid;
             }
             $operationids = array_values(array_unique(array_filter(array_map('intval', $operationids))));
             if ($operationids) {
                 [$insql, $params] = $DB->get_in_or_equal($operationids, SQL_PARAMS_NAMED, 'op');
-                $DB->delete_records_select('tool_enrolsusp_opitem', "operationid {$insql}", $params);
-                $DB->delete_records_select('tool_enrolsusp_opuser', "operationid {$insql}", $params);
-                $DB->delete_records_select('tool_enrolsusp_operation', "id {$insql}", $params);
+                $DB->delete_records_select('tool_enrolsuspension_opitm', "operationid {$insql}", $params);
+                $DB->delete_records_select('tool_enrolsuspension_opusr', "operationid {$insql}", $params);
+                $DB->delete_records_select('tool_enrolsuspension_op', "id {$insql}", $params);
             }
         }
     }
