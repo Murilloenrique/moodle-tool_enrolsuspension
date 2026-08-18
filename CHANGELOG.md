@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.7-beta - 2026-08-18
+
+- Corrige atualização de instalações existentes ao adicionar capabilities granulares.
+- Remove atribuição prematura de capabilities dentro de `db/upgrade.php`.
+- Usa `clonepermissionsfrom` em `db/access.php` para preservar permissões da capability legada `manage` durante o upgrade.
+- Mantém a correção PSR-12 da tela de revisão validada pelo Moodle Plugin CI.
+
 ## 1.1.4-beta — 2026-08-17
 
 - Corrige o padrão de cabeçalho/licença exigido pelo Moodle Code Checker.

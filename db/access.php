@@ -38,6 +38,7 @@ $capabilities = [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'read',
         'contextlevel' => CONTEXT_SYSTEM,
+        'clonepermissionsfrom' => 'tool/enrolsuspension:manage',
         'archetypes' => [
             'manager' => CAP_ALLOW,
         ],
@@ -46,6 +47,7 @@ $capabilities = [
         'riskbitmask' => RISK_PERSONAL | RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
+        'clonepermissionsfrom' => 'tool/enrolsuspension:manage',
         'archetypes' => [
             'manager' => CAP_ALLOW,
         ],
@@ -54,6 +56,7 @@ $capabilities = [
         'riskbitmask' => RISK_PERSONAL | RISK_DATALOSS,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
+        'clonepermissionsfrom' => 'tool/enrolsuspension:manage',
         'archetypes' => [
             'manager' => CAP_ALLOW,
         ],
@@ -62,6 +65,7 @@ $capabilities = [
         'riskbitmask' => RISK_PERSONAL,
         'captype' => 'write',
         'contextlevel' => CONTEXT_SYSTEM,
+        'clonepermissionsfrom' => 'tool/enrolsuspension:manage',
         'archetypes' => [
             'manager' => CAP_ALLOW,
         ],

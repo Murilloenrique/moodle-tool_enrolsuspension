@@ -142,24 +142,8 @@ function xmldb_tool_enrolsuspension_upgrade(int $oldversion): bool {
             $dbman->create_table($itemtable);
         }
 
-        // Preserve existing delegated access without granting new roles broader permissions.
-        $legacyassignments = $DB->get_records('role_capabilities', [
-            'capability' => 'tool/enrolsuspension:manage',
-        ]);
-        foreach ($legacyassignments as $assignment) {
-            if ((int) $assignment->permission !== CAP_ALLOW) {
-                continue;
-            }
-            foreach (['view', 'suspend', 'reactivate', 'import'] as $suffix) {
-                assign_capability(
-                    'tool/enrolsuspension:' . $suffix,
-                    CAP_ALLOW,
-                    $assignment->roleid,
-                    $assignment->contextid,
-                    true
-                );
-            }
-        }
+        // New granular capabilities are registered by Moodle after this upgrade function returns.
+        // Their permissions are cloned from the legacy manage capability in db/access.php.
 
         upgrade_plugin_savepoint(true, 2026081700, 'tool', 'enrolsuspension');
     }
