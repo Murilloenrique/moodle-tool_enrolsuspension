@@ -47,15 +47,22 @@ if (data_submitted()) {
 
 $token = required_param('op', PARAM_ALPHANUM);
 $operation = \tool_enrolsuspension\local\operation_manager::get($token, $USER->id);
-if (!in_array(
-    (int) $operation->status,
-    [
-        \tool_enrolsuspension\local\operation_manager::STATUS_READY,
-        \tool_enrolsuspension\local\operation_manager::STATUS_BLOCKED,
-    ],
-    true
-)) {
-    redirect(new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]));
+if (
+    !in_array(
+        (int) $operation->status,
+        [
+            \tool_enrolsuspension\local\operation_manager::STATUS_READY,
+            \tool_enrolsuspension\local\operation_manager::STATUS_BLOCKED,
+        ],
+        true
+    )
+) {
+    redirect(
+        new moodle_url(
+            '/admin/tool/enrolsuspension/options.php',
+            ['op' => $token]
+        )
+    );
 }
 $userids = \tool_enrolsuspension\local\operation_manager::userids($operation);
 $courseids = \tool_enrolsuspension\local\operation_manager::courseids($operation);
