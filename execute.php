@@ -57,15 +57,26 @@ try {
     ];
     if (in_array($exception->errorcode, $reviewerrors, true)) {
         \tool_enrolsuspension\local\operation_manager::reset_review($token, $USER->id);
-        redirect(new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]),
-            $exception->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]),
+            $exception->getMessage(),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
 
-    redirect(new moodle_url('/admin/tool/enrolsuspension/review.php', ['op' => $token]),
-        $exception->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+    redirect(
+        new moodle_url('/admin/tool/enrolsuspension/review.php', ['op' => $token]),
+        $exception->getMessage(),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 } catch (Throwable $exception) {
     debugging($exception->getMessage(), DEBUG_DEVELOPER);
-    redirect(new moodle_url('/admin/tool/enrolsuspension/review.php', ['op' => $token]),
-        get_string('operationgenericerror', 'tool_enrolsuspension'), null,
-        \core\output\notification::NOTIFY_ERROR);
+    redirect(
+        new moodle_url('/admin/tool/enrolsuspension/review.php', ['op' => $token]),
+        get_string('operationgenericerror', 'tool_enrolsuspension'),
+        null,
+        \core\output\notification::NOTIFY_ERROR
+    );
 }

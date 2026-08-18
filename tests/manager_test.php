@@ -27,9 +27,18 @@ namespace tool_enrolsuspension;
 use tool_enrolsuspension\local\manager;
 use tool_enrolsuspension\local\operation_manager;
 
-/** Workflow and exact-link tests. */
+/**
+ * Workflow and exact-link tests.
+ *
+ * @covers \tool_enrolsuspension\local\manager
+ * @covers \tool_enrolsuspension\local\operation_manager
+ */
 final class manager_test extends \advanced_testcase {
-    /** Create one manual enrolment and return its objects. */
+    /**
+     * Create one manual enrolment and return its objects.
+     *
+     * @return array
+     */
     private function create_manual_enrolment(): array {
         global $DB, $USER;
 
@@ -49,7 +58,9 @@ final class manager_test extends \advanced_testcase {
         return [$course, $user, $instance, $plugin, $ue, $USER];
     }
 
-    /** Parallel operations keep independent user selections. */
+    /**
+     * Parallel operations keep independent user selections.
+     */
     public function test_parallel_operations_are_isolated(): void {
         global $USER;
 
@@ -66,7 +77,9 @@ final class manager_test extends \advanced_testcase {
         $this->assertNotSame($opa->token, $opb->token);
     }
 
-    /** A reviewed operation can only be consumed once and creates one active audit row per exact link. */
+    /**
+     * Verify a reviewed operation is idempotent.
+     */
     public function test_suspend_operation_is_idempotent(): void {
         global $DB;
 
@@ -77,8 +90,10 @@ final class manager_test extends \advanced_testcase {
 
         $result = manager::suspend_operation($op->token, $actor->id);
         $this->assertSame(1, $result['suspended']);
-        $this->assertEquals(ENROL_USER_SUSPENDED,
-            $DB->get_field('user_enrolments', 'status', ['id' => $ue->id]));
+        $this->assertEquals(
+            ENROL_USER_SUSPENDED,
+            $DB->get_field('user_enrolments', 'status', ['id' => $ue->id])
+        );
         $this->assertEquals(1, $DB->count_records('tool_enrolsuspension_log', [
             'activekey' => 'ue:' . $ue->id,
         ]));
@@ -87,7 +102,9 @@ final class manager_test extends \advanced_testcase {
         manager::suspend_operation($op->token, $actor->id);
     }
 
-    /** Reactivating an old audit record never activates a newly-created enrolment link. */
+    /**
+     * Verify reactivation never targets a recreated enrolment link.
+     */
     public function test_reactivation_does_not_target_recreated_link(): void {
         global $DB;
 
@@ -109,9 +126,13 @@ final class manager_test extends \advanced_testcase {
 
         $result = manager::reactivate([$audit->id], $actor->id);
         $this->assertSame(0, $result['reactivated']);
-        $this->assertEquals(ENROL_USER_SUSPENDED,
-            $DB->get_field('user_enrolments', 'status', ['id' => $newue->id]));
-        $this->assertEquals(manager::STATUS_STALE,
-            $DB->get_field('tool_enrolsuspension_log', 'status', ['id' => $audit->id]));
+        $this->assertEquals(
+            ENROL_USER_SUSPENDED,
+            $DB->get_field('user_enrolments', 'status', ['id' => $newue->id])
+        );
+        $this->assertEquals(
+            manager::STATUS_STALE,
+            $DB->get_field('tool_enrolsuspension_log', 'status', ['id' => $audit->id])
+        );
     }
 }

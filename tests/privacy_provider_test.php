@@ -26,9 +26,15 @@ namespace tool_enrolsuspension;
 
 use tool_enrolsuspension\privacy\provider;
 
-/** Basic Privacy API discovery test. */
+/**
+ * Basic Privacy API discovery test.
+ *
+ * @covers \tool_enrolsuspension\privacy\provider
+ */
 final class privacy_provider_test extends \core_privacy\tests\provider_testcase {
-    /** No system context is returned for a user with no stored plugin data. */
+    /**
+     * Verify no system context is returned for a user with no stored plugin data.
+     */
     public function test_empty_context_discovery(): void {
         $this->resetAfterTest();
         $user = $this->getDataGenerator()->create_user();

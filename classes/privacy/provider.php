@@ -24,7 +24,6 @@
 
 namespace tool_enrolsuspension\privacy;
 
-defined('MOODLE_INTERNAL') || die();
 
 use core_privacy\local\metadata\collection;
 use core_privacy\local\request\approved_contextlist;
@@ -33,12 +32,19 @@ use core_privacy\local\request\contextlist;
 use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
-/** Privacy implementation for audit and workflow records. */
+/**
+ * Privacy implementation for audit and workflow records.
+ */
 class provider implements
-        \core_privacy\local\metadata\provider,
-        \core_privacy\local\request\plugin\provider,
-        \core_privacy\local\request\core_userlist_provider {
-
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\core_userlist_provider,
+    \core_privacy\local\request\plugin\provider {
+    /**
+     * Describe the personal data stored by this plugin.
+     *
+     * @param collection $collection Metadata collection.
+     * @return collection
+     */
     public static function get_metadata(collection $collection): collection {
         $collection->add_database_table('tool_enrolsuspension_log', [
             'operationid' => 'privacy:metadata:operationid',
@@ -84,13 +90,21 @@ class provider implements
         return $collection;
     }
 
+    /**
+     * Get contexts containing personal data for a user.
+     *
+     * @param int $userid User ID.
+     * @return contextlist
+     */
     public static function get_contexts_for_userid(int $userid): contextlist {
         global $DB;
 
         $list = new contextlist();
-        $hasdata = $DB->record_exists_select('tool_enrolsuspension_log',
-                'userid = :u1 OR createdby = :u2 OR reactivatedby = :u3',
-                ['u1' => $userid, 'u2' => $userid, 'u3' => $userid])
+        $hasdata = $DB->record_exists_select(
+            'tool_enrolsuspension_log',
+            'userid = :u1 OR createdby = :u2 OR reactivatedby = :u3',
+            ['u1' => $userid, 'u2' => $userid, 'u3' => $userid]
+        )
             || $DB->record_exists('tool_enrolsuspension_op', ['createdby' => $userid])
             || $DB->record_exists('tool_enrolsuspension_opusr', ['userid' => $userid])
             || $DB->record_exists('tool_enrolsuspension_opitm', ['userid' => $userid]);
@@ -100,6 +114,11 @@ class provider implements
         return $list;
     }
 
+    /**
+     * Add users who have personal data in the supplied context.
+     *
+     * @param userlist $userlist Approved user list.
+     */
     public static function get_users_in_context(userlist $userlist): void {
         $context = $userlist->get_context();
         if (!$context instanceof \context_system) {
@@ -107,13 +126,21 @@ class provider implements
         }
         $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension_log}', []);
         $userlist->add_from_sql('createdby', 'SELECT createdby FROM {tool_enrolsuspension_log} WHERE createdby > 0', []);
-        $userlist->add_from_sql('reactivatedby',
-            'SELECT reactivatedby FROM {tool_enrolsuspension_log} WHERE reactivatedby > 0', []);
+        $userlist->add_from_sql(
+            'reactivatedby',
+            'SELECT reactivatedby FROM {tool_enrolsuspension_log} WHERE reactivatedby > 0',
+            []
+        );
         $userlist->add_from_sql('createdby', 'SELECT createdby FROM {tool_enrolsuspension_op} WHERE createdby > 0', []);
         $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension_opusr}', []);
         $userlist->add_from_sql('userid', 'SELECT userid FROM {tool_enrolsuspension_opitm}', []);
     }
 
+    /**
+     * Export personal data for an approved context list.
+     *
+     * @param approved_contextlist $contextlist Approved context list.
+     */
     public static function export_user_data(approved_contextlist $contextlist): void {
         global $DB;
 
@@ -121,9 +148,12 @@ class provider implements
             return;
         }
         $userid = $contextlist->get_user()->id;
-        $audit = $DB->get_records_select('tool_enrolsuspension_log',
+        $audit = $DB->get_records_select(
+            'tool_enrolsuspension_log',
             'userid = :u1 OR createdby = :u2 OR reactivatedby = :u3',
-            ['u1' => $userid, 'u2' => $userid, 'u3' => $userid], 'timecreated ASC');
+            ['u1' => $userid, 'u2' => $userid, 'u3' => $userid],
+            'timecreated ASC'
+        );
         $selected = $DB->get_records('tool_enrolsuspension_opusr', ['userid' => $userid], 'id ASC');
         $items = $DB->get_records('tool_enrolsuspension_opitm', ['userid' => $userid], 'id ASC');
         $operationids = array_keys($DB->get_records('tool_enrolsuspension_op', ['createdby' => $userid], '', 'id'));
@@ -144,7 +174,7 @@ class provider implements
             : [];
         if ($audit || $operations || $selected || $items) {
             writer::with_context(context_system::instance())->export_data(
-                [get_string('pluginname', 'tool_enrolsuspension_log')],
+                [get_string('pluginname', 'tool_enrolsuspension')],
                 (object) [
                     'auditrecords' => array_values($audit),
                     'operationscreated' => array_values($operations),
@@ -155,6 +185,11 @@ class provider implements
         }
     }
 
+    /**
+     * Delete personal data for all users in a context.
+     *
+     * @param \context $context Context to delete from.
+     */
     public static function delete_data_for_all_users_in_context(\context $context): void {
         global $DB;
 
@@ -176,6 +211,11 @@ class provider implements
         $DB->delete_records('tool_enrolsuspension_log');
     }
 
+    /**
+     * Delete personal data for one approved user.
+     *
+     * @param approved_contextlist $contextlist Approved context list.
+     */
     public static function delete_data_for_user(approved_contextlist $contextlist): void {
         if (!in_array(context_system::instance()->id, $contextlist->get_contextids(), true)) {
             return;
@@ -183,6 +223,11 @@ class provider implements
         self::delete_users([$contextlist->get_user()->id]);
     }
 
+    /**
+     * Delete personal data for an approved user list.
+     *
+     * @param approved_userlist $userlist Approved user list.
+     */
     public static function delete_data_for_users(approved_userlist $userlist): void {
         if (!$userlist->get_context() instanceof \context_system) {
             return;
@@ -248,10 +293,12 @@ class provider implements
         if (!$ue || !$instance) {
             return;
         }
-        if ((int) $ue->userid !== (int) $record->userid
-                || (int) $ue->enrolid !== (int) $record->enrolid
-                || (int) $instance->courseid !== (int) $record->courseid
-                || (int) $ue->status !== ENROL_USER_SUSPENDED) {
+        if (
+            (int) $ue->userid !== (int) $record->userid
+            || (int) $ue->enrolid !== (int) $record->enrolid
+            || (int) $instance->courseid !== (int) $record->courseid
+            || (int) $ue->status !== ENROL_USER_SUSPENDED
+        ) {
             return;
         }
 
@@ -274,5 +321,4 @@ class provider implements
             debugging($exception->getMessage(), DEBUG_DEVELOPER);
         }
     }
-
 }

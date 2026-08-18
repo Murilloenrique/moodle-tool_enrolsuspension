@@ -24,18 +24,30 @@
 
 namespace tool_enrolsuspension\local;
 
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Stores each suspension workflow independently so parallel tabs cannot overwrite each other.
  */
 class operation_manager {
+    /** Draft workflow state. */
     public const STATUS_DRAFT = 0;
+
+    /** Ready-for-confirmation workflow state. */
     public const STATUS_READY = 1;
+
+    /** Processing workflow state. */
     public const STATUS_PROCESSING = 2;
+
+    /** Consumed workflow state. */
     public const STATUS_CONSUMED = 3;
+
+    /** Cancelled workflow state. */
     public const STATUS_CANCELLED = 4;
+
+    /** Failed workflow state. */
     public const STATUS_FAILED = 5;
+
+    /** Blocked workflow state. */
     public const STATUS_BLOCKED = 6;
 
     /** Operation lifetime in seconds. */
@@ -54,10 +66,10 @@ class operation_manager {
 
         $userids = self::normalise_ids($userids);
         if (!$userids) {
-            throw new \moodle_exception('selectatleastoneuser', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('selectatleastoneuser', 'tool_enrolsuspension');
         }
         if (count($userids) > 500) {
-            throw new \moodle_exception('toomanyusers', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('toomanyusers', 'tool_enrolsuspension');
         }
 
         $now = time();
@@ -102,7 +114,7 @@ class operation_manager {
         ], '*', MUST_EXIST);
 
         if (!$allowexpired && (int) $operation->expiresat < time()) {
-            throw new \moodle_exception('operationexpired', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('operationexpired', 'tool_enrolsuspension');
         }
         return $operation;
     }
@@ -115,8 +127,17 @@ class operation_manager {
      */
     public static function userids(\stdClass $operation): array {
         global $DB;
-        return array_map('intval', array_keys($DB->get_records('tool_enrolsuspension_opusr',
-            ['operationid' => $operation->id], 'userid ASC', 'userid')));
+        return array_map(
+            'intval',
+            array_keys(
+                $DB->get_records(
+                    'tool_enrolsuspension_opusr',
+                    ['operationid' => $operation->id],
+                    'userid ASC',
+                    'userid'
+                )
+            )
+        );
     }
 
     /**
@@ -141,14 +162,14 @@ class operation_manager {
 
         $operation = self::get($token, $actorid);
         if (in_array((int) $operation->status, [self::STATUS_PROCESSING, self::STATUS_CONSUMED], true)) {
-            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension');
         }
         $courseids = self::normalise_ids($courseids);
         if (!$courseids) {
-            throw new \moodle_exception('selectatleastonecourse', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('selectatleastonecourse', 'tool_enrolsuspension');
         }
         if (count($courseids) > 500) {
-            throw new \moodle_exception('toomanycourses', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('toomanycourses', 'tool_enrolsuspension');
         }
 
         $DB->delete_records('tool_enrolsuspension_opitm', ['operationid' => $operation->id]);
@@ -175,22 +196,22 @@ class operation_manager {
 
         $operation = self::get($token, $actorid);
         if (in_array((int) $operation->status, [self::STATUS_PROCESSING, self::STATUS_CONSUMED], true)) {
-            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('operationlocked', 'tool_enrolsuspension');
         }
 
         $reason = trim($reason);
         if ($reason === '') {
-            throw new \moodle_exception('reasonrequired', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('reasonrequired', 'tool_enrolsuspension');
         }
         if (\core_text::strlen($reason) > 1000) {
-            throw new \moodle_exception('reasontoolong', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('reasontoolong', 'tool_enrolsuspension');
         }
 
         $userids = self::userids($operation);
         $courseids = self::courseids($operation);
         $enrolments = manager::get_effective_active_enrolments($userids, $courseids);
         if (!$enrolments) {
-            throw new \moodle_exception('noactiveenrolments', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('noactiveenrolments', 'tool_enrolsuspension');
         }
 
         $transaction = $DB->start_delegated_transaction();
@@ -263,7 +284,9 @@ class operation_manager {
         ]);
     }
 
-    /** Delete expired, unconsumed workflow state. */
+    /**
+     * Delete expired, unconsumed workflow state.
+     */
     public static function cleanup_expired(): void {
         global $DB;
 

@@ -35,18 +35,26 @@ if (data_submitted()) {
     try {
         \tool_enrolsuspension\local\operation_manager::freeze($token, $USER->id, $reason);
     } catch (moodle_exception $exception) {
-        redirect(new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]),
-            $exception->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]),
+            $exception->getMessage(),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
     redirect(new moodle_url('/admin/tool/enrolsuspension/review.php', ['op' => $token]));
 }
 
 $token = required_param('op', PARAM_ALPHANUM);
 $operation = \tool_enrolsuspension\local\operation_manager::get($token, $USER->id);
-if (!in_array((int) $operation->status, [
+if (!in_array(
+    (int) $operation->status,
+    [
         \tool_enrolsuspension\local\operation_manager::STATUS_READY,
         \tool_enrolsuspension\local\operation_manager::STATUS_BLOCKED,
-    ], true)) {
+    ],
+    true
+)) {
     redirect(new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]));
 }
 $userids = \tool_enrolsuspension\local\operation_manager::userids($operation);
@@ -110,8 +118,10 @@ if ($items) {
 }
 
 if ((int) $operation->status === \tool_enrolsuspension\local\operation_manager::STATUS_BLOCKED) {
-    echo $OUTPUT->notification(get_string('unsupportedoperationblocked', 'tool_enrolsuspension'),
-        \core\output\notification::NOTIFY_ERROR);
+    echo $OUTPUT->notification(
+        get_string('unsupportedoperationblocked', 'tool_enrolsuspension'),
+        \core\output\notification::NOTIFY_ERROR
+    );
     echo html_writer::link(
         new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
         get_string('back'),
@@ -124,10 +134,16 @@ if ((int) $operation->status === \tool_enrolsuspension\local\operation_manager::
     ]);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
     echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'op', 'value' => $token]);
-    echo html_writer::link(new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
-        get_string('back'), ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']);
-    echo html_writer::tag('button', get_string('confirmsuspension', 'tool_enrolsuspension'),
-        ['type' => 'submit', 'class' => 'btn btn-danger']);
+    echo html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
+        get_string('back'),
+        ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']
+    );
+    echo html_writer::tag(
+        'button',
+        get_string('confirmsuspension', 'tool_enrolsuspension'),
+        ['type' => 'submit', 'class' => 'btn btn-danger']
+    );
     echo html_writer::end_tag('form');
 }
 echo $OUTPUT->footer();

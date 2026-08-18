@@ -24,16 +24,23 @@
 
 namespace tool_enrolsuspension\task;
 
-defined('MOODLE_INTERNAL') || die();
 
-/** Scheduled cleanup task. */
+/**
+ * Scheduled cleanup task.
+ */
 class cleanup_operations extends \core\task\scheduled_task {
-    /** @return string */
+    /**
+     * Return the task name.
+     *
+     * @return string
+     */
     public function get_name(): string {
         return get_string('taskcleanupoperations', 'tool_enrolsuspension');
     }
 
-    /** Execute cleanup. */
+    /**
+     * Execute the cleanup task.
+     */
     public function execute(): void {
         \tool_enrolsuspension\local\operation_manager::cleanup_expired();
     }

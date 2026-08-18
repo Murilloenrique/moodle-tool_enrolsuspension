@@ -40,12 +40,20 @@ if (data_submitted() && $confirmids !== '') {
     require_sesskey();
     $userids = array_values(array_unique(array_filter(array_map('intval', explode(',', $confirmids)))));
     if (!$userids) {
-        redirect($PAGE->url, get_string('csvnousers', 'tool_enrolsuspension'), null,
-            \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            $PAGE->url,
+            get_string('csvnousers', 'tool_enrolsuspension'),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
     if (count($userids) > 500) {
-        redirect($PAGE->url, get_string('toomanyusers', 'tool_enrolsuspension'), null,
-            \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            $PAGE->url,
+            get_string('toomanyusers', 'tool_enrolsuspension'),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
     [$insql, $params] = $DB->get_in_or_equal($userids, SQL_PARAMS_NAMED, 'confirmed');
     $params['guestid'] = guest_user()->id;
@@ -127,8 +135,10 @@ if ($data = $form->get_data()) {
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('importcsv', 'tool_enrolsuspension'));
-echo $OUTPUT->notification(get_string('csvinstructions', 'tool_enrolsuspension'),
-    \core\output\notification::NOTIFY_INFO);
+echo $OUTPUT->notification(
+    get_string('csvinstructions', 'tool_enrolsuspension'),
+    \core\output\notification::NOTIFY_INFO
+);
 $form->display();
 
 if ($report !== null) {
@@ -158,8 +168,11 @@ if ($report !== null) {
             echo html_writer::empty_tag('input', [
                 'type' => 'hidden', 'name' => 'confirmeduserids', 'value' => implode(',', $report['found']),
             ]);
-            echo html_writer::tag('button', get_string('continuewithfound', 'tool_enrolsuspension'),
-                ['type' => 'submit', 'class' => 'btn btn-primary']);
+            echo html_writer::tag(
+                'button',
+                get_string('continuewithfound', 'tool_enrolsuspension'),
+                ['type' => 'submit', 'class' => 'btn btn-primary']
+            );
             echo html_writer::end_tag('form');
         }
     }

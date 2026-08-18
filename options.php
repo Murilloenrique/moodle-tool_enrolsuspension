@@ -44,8 +44,12 @@ if (data_submitted()) {
     try {
         \tool_enrolsuspension\local\operation_manager::set_courses($token, $USER->id, $courseids);
     } catch (moodle_exception $exception) {
-        redirect(new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
-            $exception->getMessage(), null, \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
+            $exception->getMessage(),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
     redirect(new moodle_url('/admin/tool/enrolsuspension/options.php', ['op' => $token]));
 }
@@ -66,16 +70,25 @@ echo $OUTPUT->heading(get_string('suspensiondetails', 'tool_enrolsuspension'));
 echo html_writer::start_tag('form', ['method' => 'post', 'action' => new moodle_url('/admin/tool/enrolsuspension/review.php')]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
 echo html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'op', 'value' => $token]);
-echo html_writer::tag('label', get_string('reason', 'tool_enrolsuspension'),
-    ['for' => 'reason', 'class' => 'font-weight-bold']);
+echo html_writer::tag(
+    'label',
+    get_string('reason', 'tool_enrolsuspension'),
+    ['for' => 'reason', 'class' => 'font-weight-bold']
+);
 echo html_writer::tag('textarea', s($operation->reason ?? ''), [
     'id' => 'reason', 'name' => 'reason', 'rows' => 4, 'class' => 'form-control mb-3',
     'required' => 'required', 'maxlength' => 1000,
 ]);
 echo html_writer::div(get_string('permanentsuspensionnotice', 'tool_enrolsuspension'), 'alert alert-warning');
-echo html_writer::link(new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
-    get_string('back'), ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']);
-echo html_writer::tag('button', get_string('review', 'tool_enrolsuspension'),
-    ['type' => 'submit', 'class' => 'btn btn-primary']);
+echo html_writer::link(
+    new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $token]),
+    get_string('back'),
+    ['class' => 'btn btn-secondary', 'style' => 'margin-right: 12px;']
+);
+echo html_writer::tag(
+    'button',
+    get_string('review', 'tool_enrolsuspension'),
+    ['type' => 'submit', 'class' => 'btn btn-primary']
+);
 echo html_writer::end_tag('form');
 echo $OUTPUT->footer();

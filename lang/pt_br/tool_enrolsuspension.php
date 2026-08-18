@@ -23,7 +23,6 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-
 $string['activesuspensions'] = 'Suspensões ativas';
 $string['alreadymanagedsuspension'] = 'Já existe uma suspensão ativa do plugin para um dos vínculos exatos de inscrição.';
 $string['availablecourses'] = 'Disciplinas encontradas';
@@ -123,7 +122,8 @@ $string['reactivationgenericerror'] = 'Registro {$a}: a reativação falhou. ' .
     'Os detalhes técnicos foram enviados ao modo de depuração.';
 $string['reactivationinfo'] = 'Reativação/alteração de status';
 $string['reactivationsskipped'] = '{$a} vínculo(s) não foram reativados. Verifique o histórico e o método de inscrição.';
-$string['reactivationstale'] = 'Registro {$a}: o vínculo original não existe mais. O item do histórico foi marcado como obsoleto.';
+$string['reactivationstale'] = 'Registro {$a}: o vínculo original não existe mais. ' .
+    'O item do histórico foi marcado como obsoleto.';
 $string['reactivationsuccess'] = '{$a} vínculo(s) exato(s) de inscrição reativado(s) com sucesso.';
 $string['reason'] = 'Motivo';
 $string['reasonrequired'] = 'Informe o motivo da suspensão.';

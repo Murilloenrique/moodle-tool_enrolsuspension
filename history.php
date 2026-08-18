@@ -42,8 +42,8 @@ $perpage = 50;
 
 $PAGE->set_url(new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => $status, 'page' => $page]));
 $PAGE->set_context($context);
-$PAGE->set_title(get_string('history', 'tool_enrolsuspension_log'));
-$PAGE->set_heading(get_string('pluginname', 'tool_enrolsuspension_log'));
+$PAGE->set_title(get_string('history', 'tool_enrolsuspension'));
+$PAGE->set_heading(get_string('pluginname', 'tool_enrolsuspension'));
 
 $total = $DB->count_records('tool_enrolsuspension_log', ['status' => $status]);
 $sql = "SELECT s.*, u.firstname, u.lastname, u.email, c.fullname AS coursename,
@@ -59,28 +59,37 @@ $sql = "SELECT s.*, u.firstname, u.lastname, u.email, c.fullname AS coursename,
 $records = $DB->get_records_sql($sql, ['status' => $status], $page * $perpage, $perpage);
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading(get_string('history', 'tool_enrolsuspension_log'));
+echo $OUTPUT->heading(get_string('history', 'tool_enrolsuspension'));
 echo html_writer::div(
     html_writer::link(
         new moodle_url('/admin/tool/enrolsuspension/history_export.php', ['status' => $status]),
-        get_string('exporthistory', 'tool_enrolsuspension_log'),
+        get_string('exporthistory', 'tool_enrolsuspension'),
         ['class' => 'btn btn-outline-secondary']
     ),
     'mb-3'
 );
 echo html_writer::div(
-    html_writer::link(new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => 1]),
-        get_string('activesuspensions', 'tool_enrolsuspension_log'), ['class' => 'btn btn-outline-primary mr-2']) .
-    html_writer::link(new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => 0]),
-        get_string('reactivatedsuspensions', 'tool_enrolsuspension_log'), ['class' => 'btn btn-outline-secondary mr-2']) .
-    html_writer::link(new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => 2]),
-        get_string('stalesuspensions', 'tool_enrolsuspension_log'), ['class' => 'btn btn-outline-secondary']),
+    html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => 1]),
+        get_string('activesuspensions', 'tool_enrolsuspension'),
+        ['class' => 'btn btn-outline-primary mr-2']
+    ) . html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => 0]),
+        get_string('reactivatedsuspensions', 'tool_enrolsuspension'),
+        ['class' => 'btn btn-outline-secondary mr-2']
+    ) . html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => 2]),
+        get_string('stalesuspensions', 'tool_enrolsuspension'),
+        ['class' => 'btn btn-outline-secondary']
+    ),
     'mb-3'
 );
 
 if (!$records) {
-    echo $OUTPUT->notification(get_string('nohistoryrecords', 'tool_enrolsuspension_log'),
-        \core\output\notification::NOTIFY_INFO);
+    echo $OUTPUT->notification(
+        get_string('nohistoryrecords', 'tool_enrolsuspension'),
+        \core\output\notification::NOTIFY_INFO
+    );
 } else {
     $canreactivate = $status === \tool_enrolsuspension\local\manager::STATUS_SUSPENDED
         && has_capability('tool/enrolsuspension:reactivate', $context);
@@ -96,10 +105,10 @@ if (!$records) {
         $canreactivate ? get_string('select') : null,
         get_string('user'),
         get_string('course'),
-        get_string('reason', 'tool_enrolsuspension_log'),
-        get_string('suspendedon', 'tool_enrolsuspension_log'),
-        get_string('performedby', 'tool_enrolsuspension_log'),
-        $status !== 1 ? get_string('reactivationinfo', 'tool_enrolsuspension_log') : null,
+        get_string('reason', 'tool_enrolsuspension'),
+        get_string('suspendedon', 'tool_enrolsuspension'),
+        get_string('performedby', 'tool_enrolsuspension'),
+        $status !== 1 ? get_string('reactivationinfo', 'tool_enrolsuspension') : null,
     ]);
     foreach ($records as $record) {
         $row = [];
@@ -110,18 +119,18 @@ if (!$records) {
             $user = (object) ['firstname' => $record->firstname, 'lastname' => $record->lastname];
             $userlabel = fullname($user) . '<br><small>' . s($record->email) . '</small>';
         } else {
-            $userlabel = get_string('deleteduserfallback', 'tool_enrolsuspension_log', $record->userid);
+            $userlabel = get_string('deleteduserfallback', 'tool_enrolsuspension', $record->userid);
         }
         $row[] = $userlabel;
         $row[] = $record->coursename !== null ? format_string($record->coursename)
-            : get_string('deletedcoursefallback', 'tool_enrolsuspension_log', $record->courseid);
+            : get_string('deletedcoursefallback', 'tool_enrolsuspension', $record->courseid);
         $row[] = format_text($record->reason, FORMAT_PLAIN);
         $row[] = userdate($record->timecreated);
         if ($record->creatorfirstname !== null) {
             $creator = (object) ['firstname' => $record->creatorfirstname, 'lastname' => $record->creatorlastname];
             $row[] = fullname($creator);
         } else {
-            $row[] = get_string('unknownoperator', 'tool_enrolsuspension_log');
+            $row[] = get_string('unknownoperator', 'tool_enrolsuspension');
         }
         if ($status !== 1) {
             if ($record->timereactivated) {
@@ -142,11 +151,18 @@ if (!$records) {
     }
     echo html_writer::table($table);
     if ($canreactivate) {
-        echo html_writer::tag('button', get_string('reactivateselected', 'tool_enrolsuspension_log'),
-            ['type' => 'submit', 'class' => 'btn btn-success']);
+        echo html_writer::tag(
+            'button',
+            get_string('reactivateselected', 'tool_enrolsuspension'),
+            ['type' => 'submit', 'class' => 'btn btn-success']
+        );
         echo html_writer::end_tag('form');
     }
-    echo $OUTPUT->paging_bar($total, $page, $perpage,
-        new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => $status]));
+    echo $OUTPUT->paging_bar(
+        $total,
+        $page,
+        $perpage,
+        new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => $status])
+    );
 }
 echo $OUTPUT->footer();

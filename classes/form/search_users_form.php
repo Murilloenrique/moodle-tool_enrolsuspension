@@ -32,7 +32,6 @@ require_once($CFG->libdir . '/formslib.php');
  * Form used to select multiple users.
  */
 class search_users_form extends \moodleform {
-
     /**
      * Defines the form fields.
      */

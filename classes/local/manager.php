@@ -24,15 +24,21 @@
 
 namespace tool_enrolsuspension\local;
 
-defined('MOODLE_INTERNAL') || die();
 
-/** Business logic for suspending and reactivating exact enrolment links. */
+/**
+ * Business logic for suspending and reactivating exact enrolment links.
+ */
 class manager {
     /** Enrolment methods explicitly supported for administrative state changes. */
     private const SUPPORTED_ENROL_METHODS = ['manual', 'self'];
 
+    /** Reactivated audit state. */
     public const STATUS_REACTIVATED = 0;
+
+    /** Suspended audit state. */
     public const STATUS_SUSPENDED = 1;
+
+    /** Stale audit state. */
     public const STATUS_STALE = 2;
 
     /**
@@ -140,7 +146,7 @@ class manager {
         $result = ['suspended' => 0, 'skipped' => 0, 'errors' => []];
         $operation = operation_manager::get($token, $actorid);
         if ((int) $operation->status !== operation_manager::STATUS_READY) {
-            throw new \moodle_exception('operationnotready', 'tool_enrolsuspension_log');
+            throw new \moodle_exception('operationnotready', 'tool_enrolsuspension');
         }
 
         $claim = bin2hex(random_bytes(32));
@@ -162,34 +168,37 @@ class manager {
             );
             $claimed = $DB->get_record('tool_enrolsuspension_op', ['id' => $operation->id], '*', MUST_EXIST);
             if ((string) $claimed->claimtoken !== $claim || (int) $claimed->status !== operation_manager::STATUS_PROCESSING) {
-                throw new \moodle_exception('operationalreadyused', 'tool_enrolsuspension_log');
+                throw new \moodle_exception('operationalreadyused', 'tool_enrolsuspension');
             }
 
             $items = operation_manager::items($operation->id);
             if (!$items) {
-                throw new \moodle_exception('operationstatechanged', 'tool_enrolsuspension_log');
+                throw new \moodle_exception('operationstatechanged', 'tool_enrolsuspension');
             }
 
             foreach ($items as $item) {
                 if (!(int) $item->supported) {
-                    throw new \moodle_exception('operationcontainsunsupported', 'tool_enrolsuspension_log');
+                    throw new \moodle_exception('operationcontainsunsupported', 'tool_enrolsuspension');
                 }
 
                 $enrolment = self::load_exact_effective_enrolment($item->userenrolmentid);
-                if (!$enrolment || (int) $enrolment->userid !== (int) $item->userid
-                        || (int) $enrolment->enrolid !== (int) $item->enrolid
-                        || (int) $enrolment->courseid !== (int) $item->courseid) {
-                    throw new \moodle_exception('operationstatechanged', 'tool_enrolsuspension_log');
+                if (
+                    !$enrolment
+                    || (int) $enrolment->userid !== (int) $item->userid
+                    || (int) $enrolment->enrolid !== (int) $item->enrolid
+                    || (int) $enrolment->courseid !== (int) $item->courseid
+                ) {
+                    throw new \moodle_exception('operationstatechanged', 'tool_enrolsuspension');
                 }
 
                 [$supported] = self::assess_manageability($enrolment);
                 if (!$supported) {
-                    throw new \moodle_exception('operationstatechanged', 'tool_enrolsuspension_log');
+                    throw new \moodle_exception('operationstatechanged', 'tool_enrolsuspension');
                 }
 
                 $activekey = 'ue:' . $item->userenrolmentid;
                 if ($DB->record_exists('tool_enrolsuspension_log', ['activekey' => $activekey])) {
-                    throw new \moodle_exception('alreadymanagedsuspension', 'tool_enrolsuspension_log');
+                    throw new \moodle_exception('alreadymanagedsuspension', 'tool_enrolsuspension');
                 }
 
                 $instance = $DB->get_record('enrol', ['id' => $item->enrolid], '*', MUST_EXIST);
@@ -198,7 +207,7 @@ class manager {
 
                 $after = $DB->get_record('user_enrolments', ['id' => $item->userenrolmentid], 'id,status', MUST_EXIST);
                 if ((int) $after->status !== ENROL_USER_SUSPENDED) {
-                    throw new \moodle_exception('enrolmentstateunchanged', 'tool_enrolsuspension_log');
+                    throw new \moodle_exception('enrolmentstateunchanged', 'tool_enrolsuspension');
                 }
 
                 $DB->insert_record('tool_enrolsuspension_log', (object) [
@@ -258,8 +267,11 @@ class manager {
                 }
 
                 $ue = $DB->get_record('user_enrolments', ['id' => $record->userenrolmentid]);
-                if (!$ue || (int) $ue->userid !== (int) $record->userid
-                        || (int) $ue->enrolid !== (int) $record->enrolid) {
+                if (
+                    !$ue
+                    || (int) $ue->userid !== (int) $record->userid
+                    || (int) $ue->enrolid !== (int) $record->enrolid
+                ) {
                     self::mark_stale($record, $actorid);
                     $result['skipped']++;
                     $result['errors'][] = get_string('reactivationstale', 'tool_enrolsuspension', $recordid);
@@ -270,7 +282,7 @@ class manager {
                 if ((int) $ue->status !== ENROL_USER_SUSPENDED) {
                     self::mark_stale($record, $actorid);
                     $result['skipped']++;
-                    $result['errors'][] = get_string('reactivationalreadychanged', 'tool_enrolsuspension_log', $recordid);
+                    $result['errors'][] = get_string('reactivationalreadychanged', 'tool_enrolsuspension', $recordid);
                     $transaction->allow_commit();
                     continue;
                 }
@@ -294,13 +306,13 @@ class manager {
                 [$supported, $reason] = self::assess_manageability($enrolment);
                 if (!$supported) {
                     $reasonkey = 'supportreason_' . $reason;
-                    $reasonlabel = get_string_manager()->string_exists($reasonkey, 'tool_enrolsuspension_log')
-                        ? get_string($reasonkey, 'tool_enrolsuspension_log')
+                    $reasonlabel = get_string_manager()->string_exists($reasonkey, 'tool_enrolsuspension')
+                        ? get_string($reasonkey, 'tool_enrolsuspension')
                         : $reason;
                     $result['skipped']++;
                     $result['errors'][] = get_string(
                         'unsupportedmethodreason',
-                        'tool_enrolsuspension_log',
+                        'tool_enrolsuspension',
                         $reasonlabel
                     );
                     $transaction->allow_commit();
@@ -311,7 +323,7 @@ class manager {
                 $plugin->update_user_enrol($instance, $record->userid, ENROL_USER_ACTIVE);
                 $after = $DB->get_record('user_enrolments', ['id' => $record->userenrolmentid], 'id,status', MUST_EXIST);
                 if ((int) $after->status !== ENROL_USER_ACTIVE) {
-                    throw new \moodle_exception('enrolmentstateunchanged', 'tool_enrolsuspension_log');
+                    throw new \moodle_exception('enrolmentstateunchanged', 'tool_enrolsuspension');
                 }
 
                 $record->status = self::STATUS_REACTIVATED;
@@ -328,7 +340,7 @@ class manager {
                     debugging($rolledback->getMessage(), DEBUG_DEVELOPER);
                 }
                 $result['skipped']++;
-                $result['errors'][] = get_string('reactivationgenericerror', 'tool_enrolsuspension_log', $recordid);
+                $result['errors'][] = get_string('reactivationgenericerror', 'tool_enrolsuspension', $recordid);
             }
         }
         return $result;

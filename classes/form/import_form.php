@@ -28,8 +28,13 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->libdir . '/formslib.php');
 
-/** Upload form for deterministic user imports. */
+/**
+ * Upload form for deterministic user imports.
+ */
 class import_form extends \moodleform {
+    /**
+     * Define the import form fields.
+     */
     public function definition(): void {
         $mform = $this->_form;
         $mform->addElement('filepicker', 'csvfile', get_string('csvfile', 'tool_enrolsuspension'), null, [

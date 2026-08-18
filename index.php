@@ -53,8 +53,12 @@ if ($data = $searchform->get_data()) {
     require_sesskey();
     $selecteduserids = array_values(array_unique(array_filter(array_map('intval', explode(',', $data->selecteduserids)))));
     if (!$selecteduserids) {
-        redirect($PAGE->url, get_string('selectatleastoneuser', 'tool_enrolsuspension'), null,
-            \core\output\notification::NOTIFY_ERROR);
+        redirect(
+            $PAGE->url,
+            get_string('selectatleastoneuser', 'tool_enrolsuspension'),
+            null,
+            \core\output\notification::NOTIFY_ERROR
+        );
     }
     $operation = \tool_enrolsuspension\local\operation_manager::create($selecteduserids, $USER->id, $courseid);
     redirect(new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' => $operation->token]));
@@ -64,10 +68,15 @@ echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('dashboard', 'tool_enrolsuspension'));
 $searchform->display();
 echo html_writer::div(
-    html_writer::link(new moodle_url('/admin/tool/enrolsuspension/import.php'),
-        get_string('importcsv', 'tool_enrolsuspension'), ['class' => 'btn btn-outline-secondary mr-2']) .
-    html_writer::link(new moodle_url('/admin/tool/enrolsuspension/history.php'),
-        get_string('history', 'tool_enrolsuspension'), ['class' => 'btn btn-outline-secondary']),
+    html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/import.php'),
+        get_string('importcsv', 'tool_enrolsuspension'),
+        ['class' => 'btn btn-outline-secondary mr-2']
+    ) . html_writer::link(
+        new moodle_url('/admin/tool/enrolsuspension/history.php'),
+        get_string('history', 'tool_enrolsuspension'),
+        ['class' => 'btn btn-outline-secondary']
+    ),
     'mt-4'
 );
 echo $OUTPUT->footer();

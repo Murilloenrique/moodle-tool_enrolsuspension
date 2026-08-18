@@ -22,7 +22,6 @@
  * @license    https://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * Upgrade the plugin database structure.
@@ -73,7 +72,14 @@ function xmldb_tool_enrolsuspension_upgrade(int $oldversion): bool {
             $DB->set_field('tool_enrolsuspension', 'activekey', 'history:' . $record->id, ['id' => $record->id]);
         }
         $activekeyrequired = new xmldb_field(
-            'activekey', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, 'userenrolmentid'
+            'activekey',
+            XMLDB_TYPE_CHAR,
+            '64',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            null,
+            'userenrolmentid'
         );
         $dbman->change_field_notnull($audittable, $activekeyrequired);
 

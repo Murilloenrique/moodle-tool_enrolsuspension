@@ -24,7 +24,6 @@
 
 namespace tool_enrolsuspension\external;
 
-defined('MOODLE_INTERNAL') || die();
 
 use context_system;
 use core_external\external_api;
@@ -37,7 +36,6 @@ use core_external\external_value;
  * External function used by the user autocomplete field.
  */
 class search_users extends external_api {
-
     /**
      * Defines the parameters accepted by the function.
      *

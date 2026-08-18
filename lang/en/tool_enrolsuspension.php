@@ -23,7 +23,6 @@
  */
 
 defined('MOODLE_INTERNAL') || die();
-
 $string['activesuspensions'] = 'Active suspensions';
 $string['alreadymanagedsuspension'] = 'An active plugin suspension already exists for one of the exact enrolment links.';
 $string['availablecourses'] = 'Courses found';
