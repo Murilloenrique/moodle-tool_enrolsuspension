@@ -49,6 +49,7 @@ $PAGE->set_url(new moodle_url('/admin/tool/enrolsuspension/courses.php', ['op' =
 $PAGE->set_context($context);
 $PAGE->set_title(get_string('selectcourses', 'tool_enrolsuspension'));
 $PAGE->set_heading(get_string('pluginname', 'tool_enrolsuspension'));
+$PAGE->requires->js_call_amd('tool_enrolsuspension/course_selector', 'init');
 
 echo $OUTPUT->header();
 echo $OUTPUT->heading(get_string('selectcourses', 'tool_enrolsuspension'));
@@ -92,7 +93,7 @@ if (!$coursemap) {
     ];
 
     foreach ($coursemap as $courseid => $info) {
-        $enrolleduserids = array_values($info['userids']);
+        $enrolleduserids = array_map('intval', array_values($info['userids']));
         $enrollednames = [];
         $notenrollednames = [];
 

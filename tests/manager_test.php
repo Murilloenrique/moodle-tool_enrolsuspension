@@ -24,12 +24,14 @@
 
 namespace tool_enrolsuspension;
 
+use tool_enrolsuspension\local\history_manager;
 use tool_enrolsuspension\local\manager;
 use tool_enrolsuspension\local\operation_manager;
 
 /**
  * Workflow and exact-link tests.
  *
+ * @covers \tool_enrolsuspension\local\history_manager
  * @covers \tool_enrolsuspension\local\manager
  * @covers \tool_enrolsuspension\local\operation_manager
  */
@@ -100,6 +102,64 @@ final class manager_test extends \advanced_testcase {
 
         $this->expectException(\moodle_exception::class);
         manager::suspend_operation($op->token, $actor->id);
+    }
+
+    /**
+     * Verify two different courses remain represented in history after batch reactivation.
+     */
+    public function test_history_keeps_multiple_courses_after_reactivation(): void {
+        global $DB;
+
+        [$coursea, $usera, , , $uea, $actor] = $this->create_manual_enrolment();
+        [$courseb, $userb, , , $ueb] = $this->create_manual_enrolment();
+
+        $operation = operation_manager::create([$usera->id, $userb->id], $actor->id);
+        operation_manager::set_courses($operation->token, $actor->id, [$coursea->id, $courseb->id]);
+        operation_manager::freeze($operation->token, $actor->id, 'Two-course history test');
+
+        $suspendresult = manager::suspend_operation($operation->token, $actor->id);
+        $this->assertSame(2, $suspendresult['suspended']);
+
+        $auditrecords = $DB->get_records(
+            'tool_enrolsuspension_log',
+            ['operationid' => $operation->id],
+            'id ASC'
+        );
+        $this->assertCount(2, $auditrecords);
+        $this->assertEqualsCanonicalizing(
+            [(int) $coursea->id, (int) $courseb->id],
+            array_map(static fn($record): int => (int) $record->courseid, $auditrecords)
+        );
+        foreach ($auditrecords as $auditrecord) {
+            $this->assertSame('manual', $auditrecord->enroltype);
+        }
+
+        $reactivateresult = manager::reactivate(array_keys($auditrecords), $actor->id);
+        $this->assertSame(2, $reactivateresult['reactivated']);
+        $this->assertSame(0, $reactivateresult['skipped']);
+        $this->assertEquals(
+            ENROL_USER_ACTIVE,
+            $DB->get_field('user_enrolments', 'status', ['id' => $uea->id])
+        );
+        $this->assertEquals(
+            ENROL_USER_ACTIVE,
+            $DB->get_field('user_enrolments', 'status', ['id' => $ueb->id])
+        );
+
+        $history = array_values(
+            array_filter(
+                history_manager::get_records(history_manager::STATUS_ALL),
+                static fn($record): bool => (int) $record->operationid === (int) $operation->id
+            )
+        );
+        $this->assertCount(2, $history);
+        $this->assertEqualsCanonicalizing(
+            [(int) $coursea->id, (int) $courseb->id],
+            array_map(static fn($record): int => (int) $record->courseid, $history)
+        );
+        foreach ($history as $historyrecord) {
+            $this->assertSame(manager::STATUS_REACTIVATED, (int) $historyrecord->status);
+        }
     }
 
     /**

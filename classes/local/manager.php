@@ -216,6 +216,7 @@ class manager {
                     'courseid' => $item->courseid,
                     'enrolid' => $item->enrolid,
                     'userenrolmentid' => $item->userenrolmentid,
+                    'enroltype' => $item->enroltype,
                     'activekey' => $activekey,
                     'reason' => $operation->reason,
                     'status' => self::STATUS_SUSPENDED,
@@ -368,7 +369,8 @@ class manager {
                     'userids' => [],
                 ];
             }
-            $map[$enrolment->courseid]['userids'][$enrolment->userid] = $enrolment->userid;
+            $userid = (int) $enrolment->userid;
+            $map[$enrolment->courseid]['userids'][$userid] = $userid;
         }
         uasort($map, static fn(array $a, array $b): int => strcasecmp($a['course']->fullname, $b['course']->fullname));
         return $map;

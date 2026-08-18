@@ -71,17 +71,10 @@ function xmldb_tool_enrolsuspension_upgrade(int $oldversion): bool {
         foreach ($remaining as $record) {
             $DB->set_field('tool_enrolsuspension', 'activekey', 'history:' . $record->id, ['id' => $record->id]);
         }
-        $activekeyrequired = new xmldb_field(
-            'activekey',
-            XMLDB_TYPE_CHAR,
-            '64',
-            null,
-            XMLDB_NOTNULL,
-            null,
-            null,
-            'userenrolmentid'
-        );
-        $dbman->change_field_notnull($audittable, $activekeyrequired);
+        // Keep the legacy column nullability unchanged during upgrade.
+        // Existing rows have already been populated above, and new installs use the NOT NULL definition
+        // from install.xml. Changing nullability here is unsafe when an interrupted upgrade has already
+        // created an index depending on activekey.
 
         $activeindex = new xmldb_index('activekeyuniq', XMLDB_INDEX_UNIQUE, ['activekey']);
         if (!$dbman->index_exists($audittable, $activeindex)) {
@@ -149,34 +142,14 @@ function xmldb_tool_enrolsuspension_upgrade(int $oldversion): bool {
     }
 
     if ($oldversion < 2026081702) {
-        // Rename plugin tables so every table uses the full Frankenstyle component prefix.
-        // Drop child foreign keys before renaming the referenced operation table, then recreate them.
+        // Rename legacy plugin tables to the full Frankenstyle component prefix.
+        // Do not inspect or recreate foreign keys here: database_manager has no key_exists() API in
+        // Moodle 4.4/4.5, and supported database engines preserve constraints during table renames.
+        // Each rename is guarded so an interrupted upgrade can be resumed safely.
+        $legacyoperation = new xmldb_table('tool_enrolsusp_operation');
         $legacyopuser = new xmldb_table('tool_enrolsusp_opuser');
         $legacyopitem = new xmldb_table('tool_enrolsusp_opitem');
-        $legacyoperation = new xmldb_table('tool_enrolsusp_operation');
         $legacyaudit = new xmldb_table('tool_enrolsuspension');
-
-        $legacyuserfk = new xmldb_key(
-            'operationfk',
-            XMLDB_KEY_FOREIGN,
-            ['operationid'],
-            'tool_enrolsusp_operation',
-            ['id']
-        );
-        if ($dbman->table_exists($legacyopuser) && $dbman->key_exists($legacyopuser, $legacyuserfk)) {
-            $dbman->drop_key($legacyopuser, $legacyuserfk);
-        }
-
-        $legacyitemfk = new xmldb_key(
-            'operationfk',
-            XMLDB_KEY_FOREIGN,
-            ['operationid'],
-            'tool_enrolsusp_operation',
-            ['id']
-        );
-        if ($dbman->table_exists($legacyopitem) && $dbman->key_exists($legacyopitem, $legacyitemfk)) {
-            $dbman->drop_key($legacyopitem, $legacyitemfk);
-        }
 
         $newaudit = new xmldb_table('tool_enrolsuspension_log');
         if ($dbman->table_exists($legacyaudit) && !$dbman->table_exists($newaudit)) {
@@ -198,29 +171,55 @@ function xmldb_tool_enrolsuspension_upgrade(int $oldversion): bool {
             $dbman->rename_table($legacyopitem, 'tool_enrolsuspension_opitm');
         }
 
-        $newuserfk = new xmldb_key(
-            'operationfk',
-            XMLDB_KEY_FOREIGN,
-            ['operationid'],
-            'tool_enrolsuspension_op',
-            ['id']
-        );
-        if ($dbman->table_exists($newopuser) && !$dbman->key_exists($newopuser, $newuserfk)) {
-            $dbman->add_key($newopuser, $newuserfk);
-        }
-
-        $newitemfk = new xmldb_key(
-            'operationfk',
-            XMLDB_KEY_FOREIGN,
-            ['operationid'],
-            'tool_enrolsuspension_op',
-            ['id']
-        );
-        if ($dbman->table_exists($newopitem) && !$dbman->key_exists($newopitem, $newitemfk)) {
-            $dbman->add_key($newopitem, $newitemfk);
-        }
-
         upgrade_plugin_savepoint(true, 2026081702, 'tool', 'enrolsuspension');
+    }
+
+    if ($oldversion < 2026081803) {
+        // Final savepoint for the resumable homologation upgrade fixes.
+        upgrade_plugin_savepoint(true, 2026081803, 'tool', 'enrolsuspension');
+    }
+
+    if ($oldversion < 2026081806) {
+        $historytable = new xmldb_table('tool_enrolsuspension_log');
+        $enroltype = new xmldb_field(
+            'enroltype',
+            XMLDB_TYPE_CHAR,
+            '50',
+            null,
+            XMLDB_NOTNULL,
+            null,
+            'unknown',
+            'userenrolmentid'
+        );
+        if (!$dbman->field_exists($historytable, $enroltype)) {
+            $dbman->add_field($historytable, $enroltype);
+        }
+
+        // Backfill the enrolment method for existing history where the enrol instance still exists.
+        $historyrecords = $DB->get_records('tool_enrolsuspension_log', [], '', 'id,enrolid,enroltype');
+        $enrolids = [];
+        foreach ($historyrecords as $historyrecord) {
+            if ((string) $historyrecord->enroltype === 'unknown' && (int) $historyrecord->enrolid > 0) {
+                $enrolids[] = (int) $historyrecord->enrolid;
+            }
+        }
+        $enrolids = array_values(array_unique($enrolids));
+        $enrolinstances = $enrolids
+            ? $DB->get_records_list('enrol', 'id', $enrolids, '', 'id,enrol')
+            : [];
+        foreach ($historyrecords as $historyrecord) {
+            $enrolid = (int) $historyrecord->enrolid;
+            if ((string) $historyrecord->enroltype === 'unknown' && isset($enrolinstances[$enrolid])) {
+                $DB->set_field(
+                    'tool_enrolsuspension_log',
+                    'enroltype',
+                    $enrolinstances[$enrolid]->enrol,
+                    ['id' => $historyrecord->id]
+                );
+            }
+        }
+
+        upgrade_plugin_savepoint(true, 2026081806, 'tool', 'enrolsuspension');
     }
 
     return true;

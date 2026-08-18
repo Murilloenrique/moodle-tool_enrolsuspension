@@ -43,4 +43,11 @@ if ($result['skipped']) {
     $type = $result['reactivated'] ? \core\output\notification::NOTIFY_WARNING
         : \core\output\notification::NOTIFY_ERROR;
 }
-redirect(new moodle_url('/admin/tool/enrolsuspension/history.php'), $message, null, $type);
+redirect(
+    new moodle_url('/admin/tool/enrolsuspension/history.php', [
+        'status' => \tool_enrolsuspension\local\history_manager::STATUS_ALL,
+    ]),
+    $message,
+    null,
+    $type
+);

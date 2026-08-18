@@ -52,6 +52,7 @@ class provider implements
             'courseid' => 'privacy:metadata:courseid',
             'enrolid' => 'privacy:metadata:enrolid',
             'userenrolmentid' => 'privacy:metadata:userenrolmentid',
+            'enroltype' => 'privacy:metadata:enroltype',
             'activekey' => 'privacy:metadata:activekey',
             'reason' => 'privacy:metadata:reason',
             'status' => 'privacy:metadata:status',

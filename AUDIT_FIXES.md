@@ -13,7 +13,7 @@ Este arquivo resume as alterações realizadas após a auditoria da versão 1.0.
 ## Prioridade média
 
 - M-01: seleção e execução usam a mesma definição de vínculo ativo: status do usuário, status da instância, datas e plugin de inscrição habilitado.
-- M-02: o histórico passou a ser paginado, usa `LEFT JOIN`, mostra informações de reativação e possui exportação CSV.
+- M-02: o histórico é paginado, usa `LEFT JOIN`, mostra status, operação, método de inscrição e informações de reativação, abre por padrão em visão completa e exporta em Excel (.xlsx).
 - M-03: a importação passou a usar `csv_import_reader`, uma coluna de identificação explícita, consultas em lote, relatório de ausentes/ambíguos e limites de processamento.
 - M-04: as capabilities foram separadas em visualização, suspensão, reativação e importação; os riscos `RISK_PERSONAL` e `RISK_DATALOSS` foram declarados conforme a operação.
 

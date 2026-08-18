@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.1.14-beta - 2026-08-18
+
+- Replaces raw workflow IDs in the history with stable sequential operation codes (`OP-0001`, `OP-0002`, ...).
+- Keeps the same operation code on every row created by the same batch suspension.
+- Adds the internal operation ID as a separate Excel export column for audit traceability.
+
+
+## 1.1.13-beta - 2026-08-18
+
+- O histórico passa a abrir em uma visão completa, sem esconder registros reativados ou obsoletos em outra aba por padrão.
+- Adiciona coluna de status, operação e método de inscrição no histórico.
+- Persiste o tipo de inscrição (`manual`, `self`, etc.) no registro de auditoria para preservar a informação mesmo após alterações futuras na instância.
+- Substitui a exportação CSV por arquivo Excel `.xlsx` usando a Dataformat API nativa do Moodle.
+- Explica na própria tela o significado de registro obsoleto.
+- Após uma reativação, retorna à visão completa do histórico para evitar a impressão de que cursos/registros desapareceram.
+- Adiciona teste de regressão com dois alunos em cursos diferentes, validando suspensão, reativação e permanência dos dois cursos no histórico.
+
+## 1.1.12-beta - 2026-08-18
+
+- Ao marcar a suspensão em todas as disciplinas ativas, todas as disciplinas exibidas são selecionadas automaticamente.
+- Os checkboxes individuais ficam bloqueados enquanto a opção geral estiver marcada e voltam a ficar disponíveis ao desmarcá-la.
+
+## 1.1.11-beta - 2026-08-18
+
+- Corrige a identificação visual de alunos matriculados na tela de seleção de disciplinas quando IDs retornam do banco como strings.
+- Normaliza IDs de usuários para inteiros no mapa de disciplinas, mantendo comparações estritas e consistentes.
+
+
 ## 1.1.7-beta - 2026-08-18
 
 - Corrige atualização de instalações existentes ao adicionar capabilities granulares.

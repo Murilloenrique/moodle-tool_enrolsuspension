@@ -35,7 +35,7 @@ A suspensão não exclui a conta do usuário nem remove definitivamente sua matr
 - Atalho para a ferramenta dentro das disciplinas.
 - Operações isoladas por identificador único, evitando conflito entre abas paralelas.
 - Confirmação de uso único e validação dos vínculos exatos revisados.
-- Histórico paginado com exportação CSV.
+- Histórico paginado com status, método de inscrição e exportação em Excel (.xlsx).
 
 ## Compatibilidade
 

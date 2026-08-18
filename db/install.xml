@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="admin/tool/enrolsuspension/db" VERSION="20260817" COMMENT="XMLDB file for tool_enrolsuspension">
+<XMLDB PATH="admin/tool/enrolsuspension/db" VERSION="20260818" COMMENT="XMLDB file for tool_enrolsuspension">
   <TABLES>
     <TABLE NAME="tool_enrolsuspension_log" COMMENT="Permanent enrolment suspensions managed by the plugin">
       <FIELDS>
@@ -9,6 +9,7 @@
         <FIELD NAME="courseid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
         <FIELD NAME="userenrolmentid" TYPE="int" LENGTH="10" NOTNULL="true" DEFAULT="0"/>
+        <FIELD NAME="enroltype" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="unknown"/>
         <FIELD NAME="activekey" TYPE="char" LENGTH="64" NOTNULL="true"/>
         <FIELD NAME="reason" TYPE="text" NOTNULL="false"/>
         <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="1"/>

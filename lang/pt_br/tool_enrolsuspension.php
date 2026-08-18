@@ -24,6 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 $string['activesuspensions'] = 'Suspensões ativas';
+$string['allhistoryrecords'] = 'Todos os registros';
 $string['alreadymanagedsuspension'] = 'Já existe uma suspensão ativa do plugin para um dos vínculos exatos de inscrição.';
 $string['availablecourses'] = 'Disciplinas encontradas';
 $string['confirmsuspension'] = 'Confirmar suspensão';
@@ -49,21 +50,31 @@ $string['dashboard'] = 'Dashboard';
 $string['deletedcoursefallback'] = 'Disciplina excluída/indisponível #{$a}';
 $string['deleteduserfallback'] = 'Usuário excluído/indisponível #{$a}';
 $string['details'] = 'Detalhes';
+$string['enrolinstanceid'] = 'ID da instância de inscrição';
 $string['enrolledlabel'] = 'Matriculados';
 $string['enrolledselectedusers'] = 'Alunos matriculados';
 $string['enrolmentdetails'] = 'Detalhes dos vínculos de inscrição';
 $string['enrolmentlinkstoaffect'] = 'Vínculos exatos de inscrição';
 $string['enrolmentmethod'] = 'Método de inscrição';
+$string['enrolmentmethodwithtype'] = '{$a->name} ({$a->type})';
 $string['enrolmentstateunchanged'] = 'O Moodle não alterou o estado esperado da inscrição. A operação foi revertida.';
+$string['enrolmenttechnicaltype'] = 'Tipo técnico da inscrição';
 $string['enrolsuspension:import'] = 'Importar alunos para suspensão';
 $string['enrolsuspension:manage'] = 'Legado: gerenciar suspensões de inscrições';
 $string['enrolsuspension:reactivate'] = 'Reativar inscrições suspensas';
 $string['enrolsuspension:suspend'] = 'Pesquisar alunos e suspender inscrições';
 $string['enrolsuspension:view'] = 'Visualizar histórico de suspensões';
-$string['exporthistory'] = 'Exportar histórico atual em CSV';
+$string['exporthistory'] = 'Exportar histórico atual em Excel';
+$string['exporthistoryexcel'] = 'Exportar histórico em Excel (.xlsx)';
 $string['history'] = 'Histórico';
+$string['historyoperationexplanation'] = 'As operações são numeradas em sequência no histórico (OP-0001, OP-0002, ...). O mesmo código aparece em várias linhas quando vários vínculos foram suspensos na mesma operação.';
+$string['historyrecordid'] = 'ID do registro';
+$string['historystatusreactivated'] = 'Reativada';
+$string['historystatusstale'] = 'Obsoleto';
+$string['historystatussuspended'] = 'Suspensa';
 $string['idnumberlabel'] = 'Matrícula';
 $string['importcsv'] = 'Importar CSV/TXT';
+$string['legacyrecord'] = 'Legado';
 $string['minimumcharacters'] = 'Digite pelo menos 2 caracteres.';
 $string['navigationcategory'] = 'Controle de Suspensões';
 $string['next'] = 'Próximo';
@@ -73,10 +84,12 @@ $string['nohistoryrecords'] = 'Nenhum registro foi encontrado.';
 $string['notenrolledlabel'] = 'Não matriculados';
 $string['nousersfound'] = 'Nenhum aluno foi encontrado.';
 $string['nousersselected'] = 'Nenhum aluno foi selecionado.';
+$string['operation'] = 'Operação';
 $string['operationalreadyused'] = 'Esta operação já foi enviada ou está sendo processada.';
 $string['operationcontainsunsupported'] = 'A operação revisada contém um método de inscrição não suportado.';
 $string['operationexpired'] = 'Esta operação de suspensão expirou. Inicie uma nova operação.';
 $string['operationgenericerror'] = 'A operação não pôde ser concluída. Nenhuma suspensão parcial foi confirmada.';
+$string['operationinternalid'] = 'ID interno da operação';
 $string['operationlocked'] = 'Esta operação não pode mais ser editada.';
 $string['operationnotready'] = 'A operação não está pronta para confirmação.';
 $string['operationstatechanged'] = 'O estado da inscrição mudou após a revisão. Nenhuma alteração foi aplicada. ' .
@@ -114,10 +127,12 @@ $string['privacy:metadata:timereactivated'] = 'A data e hora da reativação ou 
 $string['privacy:metadata:userenrolmentid'] = 'O identificador exato do vínculo de inscrição do usuário.';
 $string['privacy:metadata:userid'] = 'O usuário cuja inscrição é afetada.';
 $string['reactivate'] = 'Reativar';
+$string['reactivatedby'] = 'Reativado/alterado por';
 $string['reactivatedsuspensions'] = 'Suspensões reativadas';
 $string['reactivateselected'] = 'Reativar selecionados';
 $string['reactivationalreadychanged'] = 'Registro {$a}: o vínculo original já havia mudado de estado. ' .
     'O item do histórico foi marcado como obsoleto.';
+$string['reactivationdate'] = 'Data da reativação/alteração';
 $string['reactivationgenericerror'] = 'Registro {$a}: a reativação falhou. ' .
     'Os detalhes técnicos foram enviados ao modo de depuração.';
 $string['reactivationinfo'] = 'Reativação/alteração de status';
@@ -143,6 +158,10 @@ $string['selectedusers'] = 'Alunos selecionados';
 $string['selectuser'] = 'Selecionar';
 $string['selectusersfirst'] = 'Primeiro selecione um ou mais alunos.';
 $string['shortnamecourse'] = 'Nome breve';
+$string['staleexplanation'] = 'Registro obsoleto significa que o vínculo exato de inscrição originalmente suspenso ' .
+    'não existe mais ou teve o estado alterado fora deste plugin. Por segurança, o plugin não reativa uma matrícula nova ' .
+    'ou diferente no lugar do vínculo original.';
+$string['staleshortexplanation'] = 'Vínculo original removido ou alterado fora do plugin';
 $string['stalesuspensions'] = 'Registros obsoletos';
 $string['summaryitem'] = 'Item';
 $string['supported'] = 'Suportado';
@@ -161,9 +180,12 @@ $string['suspensiontype'] = 'Tipo de suspensão';
 $string['taskcleanupoperations'] = 'Limpar operações de suspensão expiradas';
 $string['toomanycourses'] = 'No máximo 500 disciplinas podem ser processadas em uma única operação.';
 $string['toomanyusers'] = 'No máximo 500 alunos podem ser processados em uma única operação.';
+$string['unknownenrolmentmethod'] = 'Método de inscrição desconhecido/indisponível';
 $string['unknownoperator'] = 'Operador desconhecido/excluído';
+$string['unknownstatus'] = 'Status desconhecido';
 $string['unsupportedmethodreason'] = 'Não suportado ({$a})';
 $string['unsupportedoperationblocked'] = 'Esta operação não pode ser confirmada porque um ou mais vínculos ativos são ' .
     'gerenciados por um método que não permite alterações manuais. Isso evita que uma fonte de sincronização reverta ' .
     'silenciosamente a suspensão.';
 $string['usercoursepairstoaffect'] = 'Combinações aluno-disciplina';
+$string['userenrolmentid'] = 'ID do vínculo de inscrição';
