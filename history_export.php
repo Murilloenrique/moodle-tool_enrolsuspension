@@ -57,7 +57,7 @@ $columns = [
     'timereactivated' => get_string('reactivationdate', 'tool_enrolsuspension'),
 ];
 
-$callback = static function(\stdClass $record, bool $supportshtml) use ($operationsequencemap): array {
+$callback = static function (\stdClass $record, bool $supportshtml) use ($operationsequencemap): array {
     unset($supportshtml);
 
     if ($record->firstname !== null) {

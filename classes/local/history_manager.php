@@ -102,7 +102,7 @@ class history_manager {
             $currenttype = trim((string) ($record->currentenroltype ?? ''));
             if ($storedtype !== '' && $storedtype !== 'unknown') {
                 $record->historyenroltype = $storedtype;
-            } elseif ($currenttype !== '') {
+            } else if ($currenttype !== '') {
                 $record->historyenroltype = $currenttype;
             } else {
                 $record->historyenroltype = 'unknown';
@@ -145,7 +145,7 @@ class history_manager {
      * Return a human-readable, stable operation code for the history.
      *
      * @param int $operationid Internal workflow operation ID.
-     * @param array<int, int> $sequencemap Stable operation sequence map.
+     * @param array $sequencemap Stable operation sequence map.
      * @return string Human-readable operation code.
      */
     public static function operation_label(int $operationid, array $sequencemap): string {

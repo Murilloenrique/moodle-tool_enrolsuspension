@@ -25,7 +25,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'tool_enrolsuspension';
-$plugin->version   = 2026081807;
+$plugin->version   = 2026081900;
 $plugin->requires  = 2024042200;
-$plugin->release   = '1.1.14-beta';
+$plugin->release   = '1.1.15-beta';
 $plugin->maturity  = MATURITY_BETA;

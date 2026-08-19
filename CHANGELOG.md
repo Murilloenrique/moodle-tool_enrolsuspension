@@ -1,5 +1,12 @@
 # Changelog
 
+
+## 1.1.15-beta - 2026-08-19
+
+- Corrige as violações restantes do Moodle Code Checker no histórico.
+- Corrige PHPDoc de `history_manager::operation_label()`.
+- Mantém o módulo AMD `course_selector` pronto para recompilação com o Grunt oficial do Moodle.
+
 ## 1.1.14-beta - 2026-08-18
 
 - Replaces raw workflow IDs in the history with stable sequential operation codes (`OP-0001`, `OP-0002`, ...).

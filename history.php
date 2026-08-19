@@ -58,7 +58,7 @@ $stalecount = \tool_enrolsuspension\local\history_manager::count_records(
 );
 $operationsequencemap = \tool_enrolsuspension\local\history_manager::operation_sequence_map();
 
-$filterbutton = static function(int $filterstatus, string $label, int $count) use ($status): string {
+$filterbutton = static function (int $filterstatus, string $label, int $count) use ($status): string {
     $class = $status === $filterstatus ? 'btn btn-primary mr-2' : 'btn btn-outline-secondary mr-2';
     return html_writer::link(
         new moodle_url('/admin/tool/enrolsuspension/history.php', ['status' => $filterstatus]),
@@ -179,7 +179,7 @@ if (!$records) {
         $statuslabel = \tool_enrolsuspension\local\history_manager::status_label((int) $record->status);
         if ((int) $record->status === \tool_enrolsuspension\local\manager::STATUS_SUSPENDED) {
             $row[] = html_writer::span($statuslabel, 'text-danger font-weight-bold');
-        } elseif ((int) $record->status === \tool_enrolsuspension\local\manager::STATUS_REACTIVATED) {
+        } else if ((int) $record->status === \tool_enrolsuspension\local\manager::STATUS_REACTIVATED) {
             $row[] = html_writer::span($statuslabel, 'text-success font-weight-bold');
         } else {
             $row[] = html_writer::span($statuslabel, 'text-muted font-weight-bold');
